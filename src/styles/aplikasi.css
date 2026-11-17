@@ -185,3 +185,22 @@ input[aria-invalid="true"] { border-color: var(--danger); }
 @supports not selector(::-webkit-scrollbar) {
   * { scrollbar-width: thin; scrollbar-color: var(--gulir-emas-redup) transparent; }
 }
+
+/* ---------- Editor /buat dan /edit: fokus, tanpa scroll halaman ----------
+   Saat editor terbuka (.buat-lebar), judul halaman dan tagline disembunyikan; template tampil ringkas di kepala panel
+   pratinjau. Di desktop halaman dikunci setinggi layar: yang bergulir hanya pratinjau dan isi editor.
+   Di ponsel/tablet (<= 900px) panel bertumpuk, jadi halaman tetap boleh digulir. */
+.buat-undangan.buat-lebar > .top { display: none; }
+.buat-undangan.buat-lebar { padding-block: 16px; }
+.buat-tpl-ringkas { margin: 0; padding: 4px 4px 4px 4px; gap: 10px; border-radius: 12px; min-width: 0; }
+.buat-tpl-ringkas .buat-tpl-mini { width: 30px; height: 38px; border-radius: 6px; font-size: 12px; }
+.buat-tpl-ringkas .buat-tpl-mini::after { inset: 3px; border-radius: 4px; }
+.buat-tpl-ringkas .buat-tpl-label { font-size: 10px; }
+.buat-tpl-ringkas .buat-tpl-teks strong { font-size: 13.5px; }
+.buat-tpl-ringkas .buat-tpl-ganti { margin-left: 4px; padding: 6px 12px; font-size: 12.5px; }
+.buat-pratinjau-panel .buat-panel-kepala { min-height: 56px; padding-block: 8px; }
+@media (min-width: 901px) and (min-height: 620px) {
+  html:has(.buat-lebar), body:has(.buat-lebar) { height: 100dvh; overflow: hidden; overscroll-behavior: none; }
+  body:has(.buat-lebar) { padding-bottom: 0; }
+  .buat-lebar .buat-panel { min-height: 0; }
+}

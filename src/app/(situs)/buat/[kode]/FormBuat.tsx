@@ -101,7 +101,24 @@ export function FormBuat({ kartu, dokumenAwal, awal, hariIni, ubah }: Props) {
       <div className="buat-ruang" id="buatRuang" hidden>
         <div className="buat-panel buat-pratinjau-panel">
           <div className="buat-panel-kepala">
-            <h2 className="buat-panel-judul">Pratinjau</h2>
+            <h2 className="sr-only">Pratinjau {ubah ? "perubahan undangan" : "undangan"}</h2>
+            {/* Template yang dipakai, ringkas di kepala pratinjau: judul halaman disembunyikan saat editor terbuka */}
+            <div className="buat-tpl buat-tpl-ringkas" data-kode={kartu.kode}>
+              <span className="buat-tpl-mini" aria-hidden="true">&amp;</span>
+              <span className="buat-tpl-teks">
+                <span className="buat-tpl-label">Template</span>
+                <strong>{kartu.nama}</strong>
+              </span>
+              {!ubah && (
+                <Link className="buat-tpl-ganti" href="/template" title="Isian ikut terbawa ke template lain">
+                  <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                    <path d="M13.5 6A5.5 5.5 0 0 0 3.3 4.3M2.5 10a5.5 5.5 0 0 0 10.2 1.7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                    <path d="M3 1.8v2.8h2.8M13 14.2v-2.8h-2.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Ganti
+                </Link>
+              )}
+            </div>
             <span className="buat-panel-status" id="pratinjauStatus" role="status"></span>
             <button className="btn-ghost buat-kecil" type="button" id="tombolEditor" aria-controls="buatKartu" aria-expanded="true">Sembunyikan editor</button>
           </div>
