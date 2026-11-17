@@ -9,7 +9,7 @@ Stack: Next.js 16 (App Router, TypeScript), Supabase (Postgres, Auth, Storage), 
 - Form pembuatan (`/buat/{kode}`): form singkat, lalu editor + pratinjau langsung. Pratinjau dirender di browser, jadi tetap jalan offline.
 - Draf isian tersimpan otomatis di `localStorage` perangkat (foto tidak ikut).
 - Undangan publik `/u/{slug}` dengan sapaan tamu `?to=Nama`, hitung mundur, RSVP, ucapan, amplop digital.
-- Akun (Supabase Auth): `/masuk`, `/daftar`, dasbor `/saya` berisi undangan milik pengguna dengan jumlah RSVP dan ucapan.
+- Akun: masuk hanya dengan Google (Supabase Auth), akun dibuat otomatis saat pertama masuk. Dasbor `/saya` berisi undangan milik pengguna dengan jumlah RSVP dan ucapan.
 - PWA: manifest, ikon (termasuk maskable), service worker (`public/sw.js`) dengan halaman `/offline`.
 
 ## Menjalankan lokal
@@ -29,9 +29,15 @@ Service worker tidak dipasang di `localhost:3000` supaya tidak mengganggu hot re
 2. Jalankan migration berurutan, lewat SQL Editor atau Supabase CLI (`supabase link` lalu `supabase db push`):
    - `supabase/migrations/20261117000001_skema.sql`: tabel, RLS, dan bucket Storage `undangan-foto`.
    - `supabase/migrations/20261117000002_seed_template.sql`: lima template + undangan contoh `/u/contoh-alif-putri`.
-3. Authentication > URL Configuration: isi **Site URL** dengan domain produksi, dan tambahkan
-   `https://<domain>/auth/confirm` serta `http://localhost:3000/auth/confirm` ke **Redirect URLs**.
-4. Bila konfirmasi email aktif, link di email mengarah ke `/auth/confirm`, yang memasang session lalu kembali ke halaman asal.
+3. Login Google (satu-satunya cara masuk):
+   1. Google Cloud Console > APIs & Services > OAuth consent screen: isi nama aplikasi (Inviora) dan email dukungan.
+   2. Credentials > Create credentials > OAuth client ID > Web application.
+      **Authorized redirect URIs**: `https://<project-ref>.supabase.co/auth/v1/callback` (Supabase menampilkannya di halaman provider Google).
+   3. Supabase > Authentication > Sign In / Providers > **Google**: aktifkan, isi Client ID dan Client Secret.
+   4. Matikan provider **Email** di halaman yang sama, supaya tidak ada pendaftaran email/password lewat API.
+4. Authentication > URL Configuration: isi **Site URL** dengan domain produksi, dan tambahkan
+   `https://<domain>/auth/callback` serta `http://localhost:3000/auth/callback` ke **Redirect URLs**.
+   Google kembali ke `/auth/callback`, yang memasang session lalu kembali ke halaman asal.
 
 Semua tabel memakai RLS tanpa policy: key anon tidak bisa membaca atau menulis tabel. Server mengakses data dengan
 `SUPABASE_SERVICE_ROLE_KEY`, jadi key itu wajib rahasia (tanpa awalan `NEXT_PUBLIC_`).

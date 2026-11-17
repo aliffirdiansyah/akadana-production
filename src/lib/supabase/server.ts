@@ -35,7 +35,9 @@ export async function getPengguna(): Promise<Pengguna | null> {
   const user = data.user;
   if (!user) return null;
   const email = user.email ?? "";
-  const nama = typeof user.user_metadata?.nama === "string" && user.user_metadata.nama.trim() ? user.user_metadata.nama.trim() : email.split("@")[0];
+  // Google mengisi full_name / name di user_metadata
+  const meta = user.user_metadata ?? {};
+  const nama = [meta.full_name, meta.name].find((x): x is string => typeof x === "string" && x.trim().length > 0)?.trim() ?? email.split("@")[0];
   return { id: user.id, email, nama };
 }
 

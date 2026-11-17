@@ -38,7 +38,7 @@ baca `node_modules/next/dist/docs/` sebelum memakai API Next.
 
 - Skema di `supabase/migrations/`; perubahan skema = migration baru, jangan ubah migration yang sudah jalan di produksi.
 - RLS aktif tanpa policy di semua tabel: hanya server (service role, `lib/supabase/admin.ts`) yang mengakses tabel. Jangan pakai service role di kode `"use client"`.
-- Auth: Supabase Auth. Server membaca pengguna dengan `getPengguna()` (`lib/supabase/server.ts`, memverifikasi ke server Auth). `src/proxy.ts` memperbarui session.
+- Auth: Supabase Auth, hanya Google (OAuth PKCE): `/masuk` -> Google -> `/auth/callback` (tukar kode jadi session). Tidak ada form email/password; `/daftar` mengarah ke `/masuk`. Server membaca pengguna dengan `getPengguna()` (`lib/supabase/server.ts`, memverifikasi ke server Auth). `src/proxy.ts` memperbarui session.
 - POST API mengecek header `Origin` sama dengan host (`asalSah`), pengganti antiforgery token.
 - Foto: Storage bucket `undangan-foto` (publik baca, maks 2 MB, JPG/PNG/WebP), path `{slug}/{kunci}.jpg`, kunci 32 hex acak. Dokumen menyimpan `/foto/...`, di-rewrite ke Storage di `next.config.ts`. Unggah lewat signed upload URL, lalu `terbit` memeriksa magic bytes.
 - Kode edit hanya dikembalikan sekali; DB menyimpan SHA-256-nya.

@@ -1,104 +1,45 @@
 "use client";
-// Form masuk dan daftar (port Views/Akun/Masuk.cshtml dan Daftar.cshtml) dengan Supabase Auth.
-// Session disimpan di cookie oleh @supabase/ssr, jadi server langsung mengenali pengguna setelah ini.
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+// Masuk hanya dengan akun Google (Supabase Auth, OAuth PKCE). Akun dibuat otomatis saat pertama masuk.
+// Google mengembalikan pengguna ke /auth/callback, yang memasang session di cookie lalu menuju returnUrl.
 import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { tujuanAman } from "@/lib/tujuan";
 
-// Pesan Supabase Auth (Inggris) -> pesan Indonesia
-function pesanAuth(pesan: string): string {
-  const p = pesan.toLowerCase();
-  if (p.includes("invalid login")) return "Email atau password salah.";
-  if (p.includes("email not confirmed")) return "Email belum dikonfirmasi. Buka link konfirmasi yang kami kirim ke email Anda.";
-  if (p.includes("already registered") || p.includes("already been registered")) return "Email sudah terdaftar. Silakan masuk.";
-  if (p.includes("password should be") || p.includes("weak password")) return "Password minimal 8 karakter.";
-  if (p.includes("rate limit")) return "Terlalu banyak percobaan. Tunggu sebentar, lalu coba lagi.";
-  if (p.includes("fetch")) return "Tidak bisa terhubung. Periksa koneksi, lalu coba lagi.";
-  return "Terjadi kesalahan. Silakan coba lagi.";
-}
-
-export function FormAkun({ mode, returnUrl }: { mode: "masuk" | "daftar"; returnUrl?: string }) {
-  const router = useRouter();
-  const [pesan, setPesan] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+export function FormAkun({ returnUrl, gagal }: { returnUrl?: string; gagal?: boolean }) {
+  const [pesan, setPesan] = useState<string | null>(gagal ? "Gagal masuk dengan Google. Silakan coba lagi." : null);
   const [sibuk, setSibuk] = useState(false);
-  const tujuan = tujuanAman(returnUrl);
 
-  async function kirim(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const email = String(f.get("Email") ?? "").trim();
-    const password = String(f.get("Password") ?? "");
+  async function masukGoogle() {
     setPesan(null);
-
-    if (mode === "daftar") {
-      const nama = String(f.get("Nama") ?? "").replace(/\s+/g, " ").trim();
-      if (!nama) return setPesan("Nama harus diisi.");
-      if (password.length < 8) return setPesan("Password minimal 8 karakter.");
-      if (password !== f.get("UlangiPassword")) return setPesan("Ulangi password tidak sama.");
-      setSibuk(true);
-      const { data, error } = await supabaseBrowser().auth.signUp({
-        email, password,
-        options: { data: { nama: nama.slice(0, 100) }, emailRedirectTo: `${location.origin}/auth/confirm?next=${encodeURIComponent(tujuan)}` },
-      });
+    if (!navigator.onLine) return setPesan("Sedang offline. Sambungkan internet, lalu coba lagi.");
+    setSibuk(true);
+    const next = encodeURIComponent(tujuanAman(returnUrl));
+    const { error } = await supabaseBrowser().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${location.origin}/auth/callback?next=${next}`, queryParams: { prompt: "select_account" } },
+    });
+    // berhasil: browser sudah berpindah ke halaman Google
+    if (error) {
       setSibuk(false);
-      if (error) return setPesan(pesanAuth(error.message));
-      // Konfirmasi email aktif di Supabase: belum ada session sampai link di email dibuka
-      if (!data.session) return setInfo("Akun dibuat. Buka link konfirmasi yang kami kirim ke email Anda untuk masuk.");
-    } else {
-      setSibuk(true);
-      const { error } = await supabaseBrowser().auth.signInWithPassword({ email, password });
-      setSibuk(false);
-      if (error) return setPesan(pesanAuth(error.message));
+      setPesan("Tidak bisa membuka halaman masuk Google. Silakan coba lagi.");
     }
-    router.replace(tujuan);
-    router.refresh();
   }
-
-  const alih = returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : "";
 
   return (
     <main className="wrap akun-masuk">
       <div className="card akun-kartu">
-        <h1>{mode === "masuk" ? "Selamat datang" : "Buat akun"}</h1>
-        <p className="akun-hint">{mode === "masuk"
-          ? "Masuk ke akun Inviora untuk membuat undangan digital."
-          : "Daftar untuk memakai semua template dan melihat undangan Anda di satu tempat."}</p>
+        <h1>Selamat datang</h1>
+        <p className="akun-hint">Masuk dengan akun Google untuk memakai semua template dan melihat undangan Anda di satu tempat. Akun dibuat otomatis saat pertama masuk.</p>
         {pesan && <p className="empty" role="alert">{pesan}</p>}
-        {info ? (
-          <p className="notice" role="status">{info}</p>
-        ) : (
-          <form onSubmit={kirim} noValidate>
-            {mode === "daftar" && (
-              <div className="field">
-                <label className="lbl" htmlFor="Nama">Nama</label>
-                <input id="Nama" name="Nama" autoComplete="name" maxLength={100} required />
-              </div>
-            )}
-            <div className="field">
-              <label className="lbl" htmlFor="Email">Email</label>
-              <input type="email" id="Email" name="Email" autoComplete={mode === "masuk" ? "username" : "email"} maxLength={254} required />
-            </div>
-            <div className="field">
-              <label className="lbl" htmlFor="Password">Password</label>
-              <input type="password" id="Password" name="Password" autoComplete={mode === "masuk" ? "current-password" : "new-password"} minLength={mode === "daftar" ? 8 : undefined} required />
-            </div>
-            {mode === "daftar" && (
-              <div className="field">
-                <label className="lbl" htmlFor="UlangiPassword">Ulangi password</label>
-                <input type="password" id="UlangiPassword" name="UlangiPassword" autoComplete="new-password" required />
-              </div>
-            )}
-            <button type="submit" className="btn" disabled={sibuk}>{sibuk ? "Memproses..." : mode === "masuk" ? "Masuk" : "Daftar"}</button>
-          </form>
-        )}
-        <p className="akun-alih">
-          {mode === "masuk"
-            ? <>Belum punya akun? <Link href={`/daftar${alih}`}>Daftar</Link></>
-            : <>Sudah punya akun? <Link href={`/masuk${alih}`}>Masuk</Link></>}
-        </p>
+        <button type="button" className="btn akun-google" onClick={masukGoogle} disabled={sibuk}>
+          <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true" focusable="false">
+            <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z" />
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z" />
+            <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33Z" />
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z" />
+          </svg>
+          {sibuk ? "Membuka Google..." : "Masuk dengan Google"}
+        </button>
       </div>
     </main>
   );

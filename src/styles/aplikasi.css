@@ -12,3 +12,7 @@
 .saya-angka dd { margin: 0; font-size: 20px; font-weight: 700; color: var(--ink); }
 .saya-kosong { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 40px; }
 .saya-kosong p { margin: 0; }
+
+/* Tombol masuk dengan Google (/masuk) */
+.akun-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+.akun-google svg { flex: none; background: #fff; border-radius: 50%; padding: 3px; box-sizing: content-box; }
