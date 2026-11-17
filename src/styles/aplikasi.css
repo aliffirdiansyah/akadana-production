@@ -241,3 +241,47 @@ body { background-image: var(--batik-kawung); background-size: 56px 56px; }
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 6px; pointer-events: none;
   background: var(--batik-pita) repeat-x center / 24px 6px;
 }
+
+/* ---------- Kelola tamu /tamu/{slug} ---------- */
+.tm { max-width: 960px; }
+.tm-kepala { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.tm-kepala .brand { margin: 0; }
+.tm-ringkas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 16px; }
+.tm-ringkas div { padding: 12px 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.tm-ringkas dt { font-size: 12px; color: var(--muted); }
+.tm-ringkas dd { margin: 2px 0 0; font-family: var(--font-display); font-size: 28px; line-height: 1.1; color: var(--gold); }
+.tm-tambah { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 20px; }
+.tm-tambah-btn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tm-tambah-btn svg, .tm-baris svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tm-pesan { grid-column: 1 / -1; margin: 0; }
+.tm-kosong { padding: 32px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 14px; }
+.tm-catatan { margin: 0 0 10px; }
+.tm-daftar { list-style: none; margin: 0 0 40px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.tm-baris {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 14px;
+  padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+}
+.tm-inisial {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--gold-soft); color: var(--gold); font-family: var(--font-display); font-size: 18px;
+}
+.tm-info { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+.tm-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tm-info span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tm-status { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--bg); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.tm-status-kirim { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.tm-aksi { display: flex; gap: 6px; }
+.tm-hapus:hover { color: var(--danger); border-color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+@media (max-width: 720px) {
+  .tm-tambah { grid-template-columns: minmax(0, 1fr); }
+  .tm-ringkas { gap: 8px; }
+  .tm-baris { grid-template-columns: auto minmax(0, 1fr); }
+  .tm-status { grid-column: 2; justify-self: start; }
+  .tm-aksi { grid-column: 1 / -1; }
+  .tm-aksi .sy-btn-utama { flex: 1; }
+}
+
+/* Hasil pembuatan: ajakan kirim ke tamu */
+.buat-kirim-tamu { padding: 16px; border-radius: var(--radius); background: var(--gold-soft); }
+.buat-kirim-tamu h3 { margin: 0 0 4px; }
+.buat-kirim-tamu p { margin: 0 0 10px; }

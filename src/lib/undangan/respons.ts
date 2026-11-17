@@ -1,16 +1,16 @@
 import "server-only";
-// Respons simpan undangan (buat dan ubah) untuk editor: link undangan, link per tamu, link edit, dan signed upload URL foto.
+// Respons simpan undangan (buat dan ubah) untuk editor: link undangan, link edit, link kelola tamu, dan signed upload URL foto.
 import type { HasilSimpan } from "./data";
 
 export function responsSimpan(asal: string, hasil: HasilSimpan) {
-  const url = (to?: string) => `${asal}/u/${hasil.slug}` + (to ? `?to=${encodeURIComponent(to)}` : "");
+  // Kode edit di fragment (#), tidak pernah terkirim ke server lewat URL
+  const fragmen = hasil.kodeEdit ? `#kode=${hasil.kodeEdit}` : "";
   return {
     Slug: hasil.slug,
-    Url: url(),
+    Url: `${asal}/u/${hasil.slug}`,
     KodeEdit: hasil.kodeEdit,
-    // Kode edit di fragment (#), tidak pernah terkirim ke server lewat URL
-    LinkEdit: hasil.kodeEdit ? `${asal}/edit/${hasil.slug}#kode=${hasil.kodeEdit}` : `${asal}/edit/${hasil.slug}`,
-    Tamu: hasil.tamu.map(nama => ({ Nama: nama, Url: url(nama) })),
+    LinkEdit: `${asal}/edit/${hasil.slug}${fragmen}`,
+    LinkTamu: `${asal}/tamu/${hasil.slug}${fragmen}`,
     Unggah: hasil.unggah.map(u => ({ Nama: u.nama, Path: u.path, Token: u.token })),
   };
 }

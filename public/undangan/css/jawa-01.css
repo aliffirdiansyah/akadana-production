@@ -302,3 +302,10 @@ body.terkunci { overflow: hidden; }
 @supports not selector(::-webkit-scrollbar) {
   * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--uj-prada) 60%, transparent) transparent; }
 }
+
+/* Kartu masuk undangan pribadi (/u/{slug}?t=kode): QR unik tamu di atas kartu putih supaya mudah dipindai */
+.qr-tamu .qr-kotak {
+  width: min(240px, 70vw); margin: 18px auto 14px; padding: 14px; background: #fff;
+  border: 1px solid var(--uj-prada); border-radius: 12px; box-shadow: 0 0 0 6px color-mix(in srgb, var(--uj-prada) 18%, transparent);
+}
+.qr-tamu .qr-kotak svg { display: block; width: 100%; height: auto; }

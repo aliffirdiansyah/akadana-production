@@ -7,7 +7,7 @@ import { SUPABASE_URL } from "../supabase/env";
 import type { Pengguna } from "../supabase/server";
 import { cariSection, DokumenUndangan, isiPertama, parseDokumen } from "./dokumen";
 import {
-  BUCKET_FOTO, ErrorBisnis, ErrorTidakAda, EStatusUndangan, JUMLAH_GALERI_MAKS, JUMLAH_UCAPAN, MAKS_PESAN_UCAPAN, PATH_FOTO, PESAN,
+  BUCKET_FOTO, ErrorBisnis, ErrorTidakAda, EStatusUndangan, JUMLAH_GALERI_MAKS, JUMLAH_TAMU_MAKS, JUMLAH_UCAPAN, MAKS_PESAN_UCAPAN, PATH_FOTO, PESAN,
 } from "./konstanta";
 import { bersihkanInput, bersihkanNama, NewRow, susunDokumen, TemplateKartu } from "./susun";
 import { hariIni, waktuRelatif } from "../waktu";
@@ -142,7 +142,6 @@ export interface HasilSimpan {
   slug: string;
   // Hanya ada saat dibuat (dikembalikan sekali). DB menyimpan hash-nya saja.
   kodeEdit: string | null;
-  tamu: string[];
   unggah: Unggahan[];
 }
 
@@ -233,9 +232,8 @@ export async function buatBaru(kodeTemplate: string, pemilik: Pengguna | null, i
   try {
     if (baru.length > 0)
       periksa(await db.from("t_undangan_foto").insert(baru.map(f => ({ undangan_id: baris.id, kunci: f.kunci, path: f.path }))));
-    if (data.tamu.length > 0)
-      periksa(await db.from("t_undangan_tamu").insert(data.tamu.map(nama => ({ undangan_id: baris.id, nama }))));
-    return { slug, kodeEdit, tamu: data.tamu, unggah: await buatUnggahan(baru) };
+    // Tamu dikelola terpisah di /tamu/{slug} (nama, nomor WA, kode unik), bukan dari editor
+    return { slug, kodeEdit, unggah: await buatUnggahan(baru) };
   } catch (e) {
     await db.from("t_undangan").delete().eq("id", baris.id);
     throw e;
@@ -282,10 +280,8 @@ export async function ubah(slug: string, pengguna: Pengguna | null, kodeEdit: un
     periksa(await db.from("t_undangan_foto").insert(baru.map(f => ({ undangan_id: row.id, kunci: f.kunci, path: f.path }))));
   const unggah = await buatUnggahan(baru);
 
+  // Daftar tamu tidak disentuh: kode unik, nomor WA, dan status kirim/hadir tetap
   periksa(await db.from("t_undangan").update({ dokumen, isian: { Data: input, Foto: foto }, upd_date: new Date().toISOString() }).eq("id", row.id));
-  periksa(await db.from("t_undangan_tamu").delete().eq("undangan_id", row.id));
-  if (data.tamu.length > 0)
-    periksa(await db.from("t_undangan_tamu").insert(data.tamu.map(nama => ({ undangan_id: row.id, nama }))));
 
   // Foto lama yang dilepas: hapus file dan barisnya
   const dipakai = new Set([foto.Wanita, foto.Pria, ...foto.Galeri].filter(Boolean));
@@ -295,7 +291,82 @@ export async function ubah(slug: string, pengguna: Pengguna | null, kodeEdit: un
     periksa(await db.from("t_undangan_foto").delete().eq("undangan_id", row.id).in("path", dilepas));
   }
 
-  return { slug: row.slug, kodeEdit: null, tamu: data.tamu, unggah };
+  return { slug: row.slug, kodeEdit: null, unggah };
+}
+
+// ---------- daftar tamu dan undangan pribadi ----------
+const FORMAT_KODE_TAMU = /^[0-9a-f]{32}$/;
+
+export interface TamuItem {
+  Kode: string;
+  Nama: string;
+  // 62xxxxxxxxx, null bila belum diisi
+  Telepon: string | null;
+  DikirimPada: string | null;
+  HadirPada: string | null;
+}
+
+interface BarisTamu { kode: string; nama: string; telepon: string | null; dikirim_pada: string | null; hadir_pada: string | null }
+
+const keTamu = (x: BarisTamu): TamuItem => ({ Kode: x.kode, Nama: x.nama, Telepon: x.telepon, DikirimPada: x.dikirim_pada, HadirPada: x.hadir_pada });
+
+// Nomor WA tamu: 08xx / 628xx / +628xx -> 628xx. Kosong = null.
+function bersihkanTeleponTamu(v: unknown): string | null {
+  let angka = (typeof v === "string" ? v : "").replace(/\D/g, "");
+  if (!angka) return null;
+  if (angka.startsWith("0")) angka = "62" + angka.slice(1);
+  if (!/^628\d{7,12}$/.test(angka)) throw new ErrorBisnis("Nomor WhatsApp tamu tidak valid. Contoh: 081234567890");
+  return angka;
+}
+
+// Tamu urut ditambahkan; hanya pemilik atau pemegang kode edit
+export async function daftarTamu(slug: string, pengguna: Pengguna | null, kodeEdit: unknown): Promise<{ slug: string; tamu: TamuItem[] }> {
+  const row = await barisDiizinkan(slug, pengguna, kodeEdit);
+  const rows = periksa(await supabaseAdmin().from("t_undangan_tamu").select("kode, nama, telepon, dikirim_pada, hadir_pada")
+    .eq("undangan_id", row.id).order("id")) as BarisTamu[];
+  return { slug: row.slug, tamu: rows.map(keTamu) };
+}
+
+export async function tambahTamu(slug: string, pengguna: Pengguna | null, kodeEdit: unknown, input: { Nama?: unknown; Telepon?: unknown }): Promise<TamuItem> {
+  const row = await barisDiizinkan(slug, pengguna, kodeEdit);
+  const nama = (typeof input?.Nama === "string" ? input.Nama : "").replace(/\s+/g, " ").trim();
+  if (!nama) throw new ErrorBisnis(PESAN.WAJIB("Nama tamu"));
+  if (nama.length > 60) throw new ErrorBisnis("Nama tamu maksimal 60 karakter");
+  const telepon = bersihkanTeleponTamu(input?.Telepon);
+  const db = supabaseAdmin();
+  const { count } = await db.from("t_undangan_tamu").select("id", { count: "exact", head: true }).eq("undangan_id", row.id);
+  if ((count ?? 0) >= JUMLAH_TAMU_MAKS) throw new ErrorBisnis(`Daftar tamu maksimal ${JUMLAH_TAMU_MAKS} nama`);
+  const baru = periksa(await db.from("t_undangan_tamu").insert({ undangan_id: row.id, nama, telepon, kode: randomBytes(16).toString("hex") })
+    .select("kode, nama, telepon, dikirim_pada, hadir_pada").single()) as BarisTamu;
+  return keTamu(baru);
+}
+
+async function barisTamu(slug: string, pengguna: Pengguna | null, kodeEdit: unknown, kode: unknown) {
+  const row = await barisDiizinkan(slug, pengguna, kodeEdit);
+  if (typeof kode !== "string" || !FORMAT_KODE_TAMU.test(kode)) throw new ErrorTidakAda(PESAN.TIDAK_DITEMUKAN("Tamu"));
+  return { undanganId: row.id, kode };
+}
+
+export async function hapusTamu(slug: string, pengguna: Pengguna | null, kodeEdit: unknown, kode: unknown): Promise<void> {
+  const t = await barisTamu(slug, pengguna, kodeEdit, kode);
+  periksa(await supabaseAdmin().from("t_undangan_tamu").delete().eq("undangan_id", t.undanganId).eq("kode", t.kode));
+}
+
+// Ditandai saat tombol kirim ditekan (WhatsApp dibuka di perangkat pengirim; pengiriman sebenarnya tidak bisa dipastikan)
+export async function tandaiTerkirim(slug: string, pengguna: Pengguna | null, kodeEdit: unknown, kode: unknown): Promise<TamuItem> {
+  const t = await barisTamu(slug, pengguna, kodeEdit, kode);
+  const hasil = periksa(await supabaseAdmin().from("t_undangan_tamu").update({ dikirim_pada: new Date().toISOString() })
+    .eq("undangan_id", t.undanganId).eq("kode", t.kode).select("kode, nama, telepon, dikirim_pada, hadir_pada").maybeSingle()) as BarisTamu | null;
+  if (!hasil) throw new ErrorTidakAda(PESAN.TIDAK_DITEMUKAN("Tamu"));
+  return keTamu(hasil);
+}
+
+// Tamu pemilik link pribadi /u/{slug}?t={kode}; null bila kode tidak cocok
+export async function getTamuUndangan(undangan: UndanganTerbit, kode: unknown): Promise<{ nama: string; kode: string } | null> {
+  if (typeof kode !== "string" || !FORMAT_KODE_TAMU.test(kode)) return null;
+  const row = periksa(await supabaseAdmin().from("t_undangan_tamu").select("nama, kode")
+    .eq("undangan_id", undangan.id).eq("kode", kode).maybeSingle()) as { nama: string; kode: string } | null;
+  return row;
 }
 
 // Tipe ditentukan dari isi file, bukan dari header kiriman browser. Null bila bukan JPG, PNG, atau WebP.

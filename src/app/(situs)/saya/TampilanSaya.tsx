@@ -34,6 +34,7 @@ const Ikon = {
   salin: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></>,
   wa: <path d="M5 19l1.2-3.6A7.5 7.5 0 1 1 9 18.5zM9.5 9.5c.3 2 2 3.8 4 4.2l1-1 2 .8-.4 1.6c-3.6.2-7.6-3.6-7.4-7.3l1.6-.4.8 2z" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  daftar: <><circle cx="9" cy="8" r="3" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M17 8v6M14 11h6" /></>,
 };
 
 function Svg({ d, ukuran = 16 }: { d: React.ReactNode; ukuran?: number }) {
@@ -74,6 +75,7 @@ function Kartu({ u, hari, asal }: { u: UndanganMilik; hari: string; asal: string
           <div className="sy-aksi">
             {u.terbit && <a className="sy-btn sy-btn-utama" href={link} target="_blank" rel="noopener"><Svg d={Ikon.buka} />Buka</a>}
             {u.bisaDiubah && <Link className="sy-btn" href={`/edit/${u.slug}`}><Svg d={Ikon.ubah} />Ubah</Link>}
+            <Link className="sy-btn" href={`/tamu/${u.slug}`}><Svg d={Ikon.daftar} />Tamu</Link>
             {u.terbit && <TombolSalin className="sy-btn sy-btn-ikon" teks={link} label={`Salin link undangan ${pasangan}`}><Svg d={Ikon.salin} /></TombolSalin>}
             {u.terbit && (
               <a className="sy-btn sy-btn-ikon" target="_blank" rel="noopener" aria-label={`Bagikan undangan ${pasangan} ke WhatsApp`} title="Bagikan ke WhatsApp"

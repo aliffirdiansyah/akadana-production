@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import type { DokumenUndangan } from "@/lib/undangan/dokumen";
-import { JUMLAH_GALERI_MAKS, JUMLAH_TAMU_MAKS, ZONA_WAKTU } from "@/lib/undangan/konstanta";
+import { JUMLAH_GALERI_MAKS, ZONA_WAKTU } from "@/lib/undangan/konstanta";
 import type { IsiAwal, TemplateKartu } from "@/lib/undangan/susun";
 import { pasangEditor, type ModeUbah } from "./editor";
 
@@ -269,13 +269,6 @@ export function FormBuat({ kartu, dokumenAwal, awal, hariIni, ubah }: Props) {
                 </div>
               </Bagian>
 
-              <Bagian id="judulTamu" judul="Tamu yang diundang" ket="Link undangan per nama tamu">
-                <div className="field">
-                  <label className="lbl" htmlFor="daftarTamu">Satu nama per baris <Opsional teks={`opsional, maksimal ${JUMLAH_TAMU_MAKS}`} /></label>
-                  <textarea id="daftarTamu" name="Tamu" rows={6} placeholder={"Bapak Agus Setiawan\nKeluarga Ibu Dewi"}></textarea>
-                  <span className="footnote"><span id="jumlahTamu">0</span> tamu. Setiap tamu mendapat link yang menyapa namanya. Daftar ini tidak tampil di undangan.</span>
-                </div>
-              </Bagian>
             </div>
             <div className="buat-editor-kaki">
               <div className="notice" id="buatNotice" role="status" hidden></div>
@@ -294,13 +287,12 @@ export function FormBuat({ kartu, dokumenAwal, awal, hariIni, ubah }: Props) {
           <button className="btn-ghost" type="button" data-salin="hasilUrl">Salin link</button>
           <a className="btn-ghost" id="hasilWa" target="_blank" rel="noopener">Bagikan ke WhatsApp</a>
         </div>
-        <p className="footnote">Untuk menyapa tamu dengan namanya, tambahkan <code>?to=Nama Tamu</code> di akhir link.</p>
 
-        <div id="hasilTamu" className="buat-hasil-tamu" hidden>
-          <h3>Link untuk tamu</h3>
-          <p>Daftar ini bisa dibuka lagi lewat link edit: tiap kali undangan disimpan, link tamu dibuat ulang.</p>
-          <div className="buat-aksi"><button className="btn-ghost" type="button" id="salinSemuaTamu">Salin semua link</button></div>
-          <ul className="buat-tamu" id="hasilTamuDaftar"></ul>
+        {/* Tamu dikelola setelah undangan jadi: nama + nomor WA, kirim lewat WhatsApp, tiap tamu mendapat QR unik */}
+        <div className="buat-hasil-tamu buat-kirim-tamu">
+          <h3>Kirim ke tamu</h3>
+          <p>Tambahkan nama dan nomor WhatsApp tamu, lalu kirim undangan satu per satu. Setiap tamu mendapat link pribadi dengan QR unik untuk buku tamu.</p>
+          <div className="buat-aksi"><a className="btn" id="hasilKelolaTamu">Kelola tamu &amp; kirim undangan</a></div>
         </div>
 
         <div id="hasilEdit">

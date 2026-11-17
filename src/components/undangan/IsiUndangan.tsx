@@ -24,9 +24,11 @@ export interface PropsIsiUndangan {
   // "template" (/contoh/{kode}) atau "form" (pratinjau di form pembuatan): formulir tamu tidak mengirim apa pun
   pratinjau: ModePratinjau;
   bar?: BarPratinjau | null;
+  // Undangan pribadi (/u/{slug}?t={kode}): kartu masuk berisi QR unik tamu, ditunjukkan ke penerima tamu
+  kartuTamu?: { nama: string; qrSvg: string } | null;
 }
 
-export function IsiUndangan({ dokumen, templateKode, slug, namaTamu, ucapan, pratinjau, bar }: PropsIsiUndangan) {
+export function IsiUndangan({ dokumen, templateKode, slug, namaTamu, ucapan, pratinjau, bar, kartuTamu }: PropsIsiUndangan) {
   const tampil = dokumen.section.filter(x => x.tampil);
   const sampul = tampil.find(x => x.tipe === "sampul");
   const k = { judul: dokumen.meta.judul, namaTamu, ucapan };
@@ -53,6 +55,16 @@ export function IsiUndangan({ dokumen, templateKode, slug, namaTamu, ucapan, pra
 
       <main className="undangan" id="undangan" data-url={`/api/u/${slug}`} data-pratinjau={pratinjau ?? undefined}>
         {tampil.filter(x => x !== sampul).map(section => <Section key={section.id} section={section} k={k} />)}
+        {kartuTamu && (
+          <section className="sec qr-tamu" data-tipe="qr-tamu" aria-labelledby="judulQrTamu">
+            <div className="label">Kartu Masuk</div>
+            <h2 className="judul" id="judulQrTamu">{kartuTamu.nama}</h2>
+            {/* SVG dibuat server dari link pribadi tamu (library qrcode), tanpa layanan luar */}
+            <div className="qr-kotak muncul" role="img" aria-label={`QR undangan untuk ${kartuTamu.nama}`}
+              dangerouslySetInnerHTML={{ __html: kartuTamu.qrSvg }} />
+            <p className="terjemah">Tunjukkan QR ini kepada penerima tamu saat tiba. QR ini khusus untuk Anda.</p>
+          </section>
+        )}
         <footer className="kaki">Dibuat dengan Akadana</footer>
       </main>
     </>

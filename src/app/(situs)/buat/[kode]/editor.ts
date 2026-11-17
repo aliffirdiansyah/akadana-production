@@ -38,7 +38,7 @@ interface HasilBuat {
   Url: string;
   KodeEdit: string | null;
   LinkEdit: string;
-  Tamu: { Nama: string; Url: string }[];
+  LinkTamu: string;
   Unggah: { Nama: string; Path: string; Token: string }[];
 }
 
@@ -250,8 +250,8 @@ export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: strin
   const tampilRsvp = $("tampilRsvp");
   on(tampilRsvp, "change", () => { $("isianRsvp").hidden = !tampilRsvp.checked; });
 
-  const bacaTamu = () => ($<HTMLTextAreaElement>("daftarTamu").value).split("\n").map(x => x.trim()).filter(Boolean);
-  on($("daftarTamu"), "input", () => { $("jumlahTamu").textContent = String(bacaTamu().length); });
+  // Tamu (nama + nomor WA + QR unik) dikelola di /tamu/{slug} setelah undangan jadi, bukan di editor
+  const bacaTamu = (): string[] => [];
 
   // ---------- nomor WhatsApp ----------
   // Hanya angka (boleh diawali "+"): huruf, spasi, dan tanda lain langsung dibuang saat diketik atau ditempel (lib/undangan/singkat.ts)
@@ -269,7 +269,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: strin
   }
 
   // ---------- kirim ----------
-  function periksa(acara: Baris[], rekening: Baris[], tamu: string[]): { pesan: string; el: HTMLElement } | null {
+  function periksa(acara: Baris[], rekening: Baris[]): { pesan: string; el: HTMLElement } | null {
     const wajib: [string, string][] = [
       ["panggilanWanita", "Nama panggilan mempelai wanita"],
       ["panggilanPria", "Nama panggilan mempelai pria"],
@@ -300,9 +300,6 @@ export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: strin
       const maks = Number($("maksTamu").value);
       if (!Number.isInteger(maks) || maks < 1 || maks > 10) return { pesan: "Maksimal tamu per konfirmasi antara 1 dan 10.", el: $("maksTamu") };
     }
-    if (tamu.length > BATAS.tamu) return { pesan: `Daftar tamu maksimal ${BATAS.tamu} nama.`, el: $("daftarTamu") };
-    const namaPanjang = tamu.find(x => x.length > 60);
-    if (namaPanjang) return { pesan: `Nama tamu maksimal 60 karakter: ${namaPanjang}`, el: $("daftarTamu") };
     return null;
   }
 
@@ -384,7 +381,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: strin
     const acara = daftarAcara.nilai(), rekening = daftarRekening.nilai(), tamu = bacaTamu();
 
     if (!tertunda) {
-      const salah = periksa(acara, rekening, tamu);
+      const salah = periksa(acara, rekening);
       if (salah) {
         tampilEditor(true);
         tampil(salah.pesan);
@@ -450,27 +447,6 @@ export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: strin
     setTimeout(() => { btn.textContent = asli; }, 1800);
   }
 
-  function barisTamu(tamu: { Nama: string; Url: string }, pasangan: string) {
-    const li = document.createElement("li");
-    const nama = document.createElement("span");
-    nama.textContent = tamu.Nama;
-    const salinBtn = document.createElement("button");
-    salinBtn.type = "button";
-    salinBtn.className = "btn-ghost";
-    salinBtn.textContent = "Salin link";
-    salinBtn.setAttribute("aria-label", `Salin link untuk ${tamu.Nama}`);
-    salinBtn.addEventListener("click", () => salin(salinBtn, tamu.Url));
-    const wa = document.createElement("a");
-    wa.className = "btn-ghost";
-    wa.target = "_blank";
-    wa.rel = "noopener";
-    wa.textContent = "WhatsApp";
-    wa.setAttribute("aria-label", `Kirim ke ${tamu.Nama} lewat WhatsApp`);
-    wa.href = "https://wa.me/?text=" + encodeURIComponent(`Kepada ${tamu.Nama}, kami mengundang Anda ke pernikahan ${pasangan}: ${tamu.Url}`);
-    li.append(nama, salinBtn, wa);
-    return li;
-  }
-
   function tampilHasil(hasil: HasilBuat, data: NewRow) {
     const pasangan = `${data.Wanita?.NamaPanggilan} & ${data.Pria?.NamaPanggilan}`;
     const url = $<HTMLAnchorElement>("hasilUrl");
@@ -480,12 +456,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: strin
     $("hasilLinkEdit").textContent = hasil.LinkEdit;
     $<HTMLAnchorElement>("hasilWa").href = "https://wa.me/?text=" + encodeURIComponent(`Undangan pernikahan ${pasangan}: ${hasil.Url}`);
 
-    if (hasil.Tamu.length > 0) {
-      $("hasilTamu").hidden = false;
-      $("hasilTamuDaftar").replaceChildren(...hasil.Tamu.map(x => barisTamu(x, pasangan)));
-      const semua = $("salinSemuaTamu");
-      on(semua, "click", () => salin(semua, hasil.Tamu.map(x => `${x.Nama}: ${x.Url}`).join("\n")));
-    }
+    $<HTMLAnchorElement>("hasilKelolaTamu").href = hasil.LinkTamu;
 
     clearTimeout(timerPratinjau);
     aktif = false;
@@ -765,8 +736,6 @@ export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: strin
     setel("maksTamu", d.MaksTamu || 2);
     setel("catatanRsvp", d.CatatanRsvp);
     $("tampilUcapan").checked = !!d.TampilUcapan;
-    setel("daftarTamu", (d.Tamu ?? []).join("\n"));
-    $("jumlahTamu").textContent = String(bacaTamu().length);
 
     daftarAcara.kosongkan();
     (d.Acara ?? []).forEach(x => daftarAcara.tambah({
