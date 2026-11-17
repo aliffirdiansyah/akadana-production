@@ -26,8 +26,22 @@ input[aria-invalid="true"] { border-color: var(--danger); }
 /* Beranda pengguna login: hanya judul + form data utama, di tengah layar */
 .beranda-fokus {
   min-height: calc(100dvh - var(--tinggi-navbar, 69px));
-  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px;
-  padding-block: 32px 48px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px;
+  padding-block: 16px;
+}
+/* Muat satu layar: tanpa scroll vertikal. Di layar yang terlalu pendek (< 620px) scroll tetap boleh supaya form tidak terpotong. */
+@media (min-height: 620px) {
+  html:has(.beranda-fokus), body:has(.beranda-fokus) { height: 100dvh; overflow: hidden; overscroll-behavior: none; }
+  body:has(.beranda-fokus) { padding-bottom: 0; }
+  .beranda-fokus { height: calc(100dvh - var(--tinggi-navbar, 69px)); min-height: 0; }
+}
+/* Form dipadatkan di beranda fokus; di ponsel kolom pendek tetap dua per baris supaya muat */
+.beranda-fokus .beranda-form { gap: 12px; padding: 18px; }
+.beranda-fokus .fields { gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.beranda-fokus .beranda-form-judul { font-size: 22px; }
+@media (max-height: 760px) {
+  .beranda-fokus .beranda-form .footnote, .beranda-fokus-kepala .tagline { display: none; }
+  .beranda-fokus-kepala .brand { margin: 0; }
 }
 .beranda-fokus-kepala { text-align: center; max-width: 560px; }
 .beranda-fokus-kepala .tagline { margin-top: 6px; }
