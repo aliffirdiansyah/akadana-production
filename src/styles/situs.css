@@ -227,7 +227,7 @@ body:has(.akun-masuk) { padding-bottom: 0; }
 .buat-undangan textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .buat-undangan input[type="file"] { width: 100%; font: inherit; font-size: 13px; }
 .buat-undangan [hidden] { display: none !important; }
-.buat-undangan.buat-lebar { max-width: 1180px; }
+.buat-undangan.buat-lebar { max-width: none; }
 /* Ruang kerja: dua panel setinggi layar, pratinjau di kiri (lebar) dan editor di kanan. Kepala panel sama tinggi. */
 .buat-ruang {
   --tinggi-panel: calc(100dvh - 32px - var(--tinggi-navbar));
