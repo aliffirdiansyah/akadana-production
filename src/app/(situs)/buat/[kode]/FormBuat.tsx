@@ -6,13 +6,15 @@ import { useEffect } from "react";
 import type { DokumenUndangan } from "@/lib/undangan/dokumen";
 import { JUMLAH_GALERI_MAKS, JUMLAH_TAMU_MAKS, ZONA_WAKTU } from "@/lib/undangan/konstanta";
 import type { IsiAwal, TemplateKartu } from "@/lib/undangan/susun";
-import { pasangEditor } from "./editor";
+import { pasangEditor, type ModeUbah } from "./editor";
 
 interface Props {
   kartu: TemplateKartu;
   dokumenAwal: DokumenUndangan;
   awal: IsiAwal;
   hariIni: string;
+  // Mode ubah (/edit/{slug}): editor diisi dari undangan tersimpan
+  ubah?: ModeUbah | null;
 }
 
 const MEMPELAI = [
@@ -33,28 +35,28 @@ function Bagian({ id, judul, ket, buka, children }: { id: string; judul: string;
   );
 }
 
-export function FormBuat({ kartu, dokumenAwal, awal, hariIni }: Props) {
-  useEffect(() => pasangEditor({ kode: kartu.kode, dokumenAwal, hariIni }), [kartu.kode, dokumenAwal, hariIni]);
+export function FormBuat({ kartu, dokumenAwal, awal, hariIni, ubah }: Props) {
+  useEffect(() => pasangEditor({ kode: kartu.kode, dokumenAwal, hariIni, ubah }), [kartu.kode, dokumenAwal, hariIni, ubah]);
 
   return (
     <div className="wrap buat-undangan" id="buatUndangan">
       <header className="top">
         <div>
-          <h1 className="brand">Buat undangan digital</h1>
+          <h1 className="brand">{ubah ? "Ubah undangan" : "Buat undangan digital"}</h1>
           <div className="buat-tpl" data-kode={kartu.kode}>
             <span className="buat-tpl-mini" aria-hidden="true">&amp;</span>
             <span className="buat-tpl-teks">
               <span className="buat-tpl-label">Template</span>
               <strong>{kartu.nama}</strong>
             </span>
-            {/* isian tersimpan sebagai draf, jadi ikut terbawa ke template lain */}
-            <Link className="buat-tpl-ganti" href="/#template" title="Isian ikut terbawa ke template lain">
+            {/* isian tersimpan sebagai draf, jadi ikut terbawa ke template lain. Mode ubah: template tetap. */}
+            {!ubah && <Link className="buat-tpl-ganti" href="/#template" title="Isian ikut terbawa ke template lain">
               <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
                 <path d="M13.5 6A5.5 5.5 0 0 0 3.3 4.3M2.5 10a5.5 5.5 0 0 0 10.2 1.7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                 <path d="M3 1.8v2.8h2.8M13 14.2v-2.8h-2.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Ganti template
-            </Link>
+            </Link>}
           </div>
           <p className="tagline" id="buatTagline">Isi data utama dulu. Detail lain bisa dilengkapi sambil melihat undangannya.</p>
         </div>
@@ -279,16 +281,19 @@ export function FormBuat({ kartu, dokumenAwal, awal, hariIni }: Props) {
 
         <div id="hasilTamu" className="buat-hasil-tamu" hidden>
           <h3>Link untuk tamu</h3>
-          <p>Simpan daftar ini sebelum menutup halaman. Belum ada halaman untuk membukanya lagi.</p>
+          <p>Daftar ini bisa dibuka lagi lewat link edit: tiap kali undangan disimpan, link tamu dibuat ulang.</p>
           <div className="buat-aksi"><button className="btn-ghost" type="button" id="salinSemuaTamu">Salin semua link</button></div>
           <ul className="buat-tamu" id="hasilTamuDaftar"></ul>
         </div>
 
-        <h3>Kode edit</h3>
-        <p>Simpan kode ini baik-baik. Kode ini dibutuhkan untuk mengubah undangan saat fitur edit tersedia, dan tidak bisa ditampilkan lagi.</p>
-        <div className="buat-kode-baris">
-          <code className="buat-kode" id="hasilKode"></code>
-          <button className="btn-ghost" type="button" data-salin="hasilKode">Salin kode</button>
+        <div id="hasilEdit">
+          <h3>Link untuk mengubah undangan</h3>
+          <p>Simpan link ini baik-baik (jangan dibagikan): siapa pun yang memegangnya bisa mengubah undangan. Link ini tidak bisa ditampilkan lagi.
+            Bila Anda masuk dengan Google saat membuat, undangan juga bisa diubah dari halaman Undangan saya.</p>
+          <div className="buat-kode-baris">
+            <code className="buat-kode" id="hasilLinkEdit"></code>
+            <button className="btn-ghost" type="button" data-salin="hasilLinkEdit">Salin link edit</button>
+          </div>
         </div>
       </section>
     </div>

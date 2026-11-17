@@ -5,6 +5,7 @@
 // - Pratinjau dirender di browser dari dokumen template (susunDokumen + IsiUndangan), tanpa server, jadi jalan offline.
 // - Draf disimpan di localStorage (lib/draf.ts).
 // - Foto diunggah langsung ke Supabase Storage lewat signed URL dari /api/undangan, lalu /api/undangan/{slug}/terbit.
+// - Mode ubah (/edit/{slug}): editor diisi dari isian tersimpan, foto lama bisa dipertahankan, simpan lewat PUT /api/undangan/{slug}.
 import { createElement } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
@@ -12,12 +13,13 @@ import { IsiUndangan } from "@/components/undangan/IsiUndangan";
 import { bacaDraf, hapusDraf, simpanDraf } from "@/lib/draf";
 import { Konfirmasi } from "@/lib/konfirmasi";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { FORMAT_TELEPON, type DokumenUndangan } from "@/lib/undangan/dokumen";
+import type { DokumenUndangan } from "@/lib/undangan/dokumen";
 import {
   BUCKET_FOTO, ErrorBisnis, JUMLAH_ACARA_MAKS, JUMLAH_GALERI_MAKS, JUMLAH_REKENING_MAKS, JUMLAH_TAMU_MAKS, PATH_FOTO_PRATINJAU, UKURAN_FOTO_MAKS,
 } from "@/lib/undangan/konstanta";
 import { bersihkanInput, susunDokumen, type NewRow } from "@/lib/undangan/susun";
-import { STATUS_SUKSES, type ResponseBase } from "@/lib/undangan/tipe";
+import { drafDariSingkat, periksaSingkat, saringTelepon, teleponValid, PESAN_TELEPON, type IsianSingkat } from "@/lib/undangan/singkat";
+import { STATUS_SUKSES, type FotoIsian, type ResponseBase, type SpecFoto } from "@/lib/undangan/tipe";
 import { hariIni as hariIniJakarta } from "@/lib/waktu";
 
 const SISI_FOTO_GALERI = 1600;
@@ -34,7 +36,8 @@ type Baris = { el: HTMLElement; data: Record<string, string | boolean | null> };
 interface HasilBuat {
   Slug: string;
   Url: string;
-  KodeEdit: string;
+  KodeEdit: string | null;
+  LinkEdit: string;
   Tamu: { Nama: string; Url: string }[];
   Unggah: { Nama: string; Path: string; Token: string }[];
 }
@@ -69,7 +72,15 @@ const HTML_REKENING = `
   </fieldset>`;
 
 // Dipasang sekali saat FormBuat tampil. Mengembalikan fungsi pembersih (React StrictMode memasang dua kali saat dev).
-export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dokumenAwal: DokumenUndangan; hariIni: string }) {
+// Mode ubah: undangan yang sudah ada. kodeEdit null = pemilik yang login.
+export interface ModeUbah {
+  slug: string;
+  data: NewRow;
+  foto: FotoIsian;
+  kodeEdit: string | null;
+}
+
+export function pasangEditor({ kode, dokumenAwal, hariIni, ubah }: { kode: string; dokumenAwal: DokumenUndangan; hariIni: string; ubah?: ModeUbah | null }) {
   const ac = new AbortController();
   const on = <K extends keyof HTMLElementEventMap>(el: EventTarget, ev: K, fn: (e: HTMLElementEventMap[K]) => void) =>
     el.addEventListener(ev, fn as EventListener, { signal: ac.signal });
@@ -143,17 +154,23 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     return blob;
   }
 
+  // Foto baru (blob) atau foto lama yang sudah tersimpan (path, mode ubah)
   const fotoMempelai: Record<"Wanita" | "Pria", Blob | null> = { Wanita: null, Pria: null };
+  const fotoLama: Record<"Wanita" | "Pria", string | null> = { Wanita: ubah?.foto.Wanita ?? null, Pria: ubah?.foto.Pria ?? null };
 
   document.querySelectorAll<HTMLInputElement>("[data-foto-mempelai]").forEach(input => {
     const k = input.dataset.fotoMempelai as "Wanita" | "Pria";
     const kotak = $<HTMLDivElement>(`pratinjau${k}`);
     const img = kotak.querySelector("img")!;
 
+    // foto lama tampil sejak awal di mode ubah
+    if (fotoLama[k]) { img.src = fotoLama[k]!; kotak.hidden = false; }
+
     function bersihkan() {
-      if (img.src) URL.revokeObjectURL(img.src);
+      if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
       img.removeAttribute("src");
       fotoMempelai[k] = null;
+      fotoLama[k] = null;
       kotak.hidden = true;
       input.value = "";
       jadwalPratinjau();
@@ -164,8 +181,9 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
       if (!file) { bersihkan(); return; }
       try {
         const blob = await kecilkan(file, SISI_FOTO_MEMPELAI);
-        if (img.src) URL.revokeObjectURL(img.src);
+        if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
         fotoMempelai[k] = blob;
+        fotoLama[k] = null;
         img.src = URL.createObjectURL(blob);
         urlObjek.push(img.src);
         kotak.hidden = false;
@@ -179,7 +197,8 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     on(kotak.querySelector("button")!, "click", () => { bersihkan(); input.focus(); });
   });
 
-  const galeri: { blob: Blob; url: string }[] = [];
+  // blob = foto baru; path = foto lama yang dipertahankan (mode ubah)
+  const galeri: { blob: Blob | null; url: string; path: string | null }[] = (ubah?.foto.Galeri ?? []).map(path => ({ blob: null, url: path, path }));
   const inputGaleri = $("fotoGaleri"), daftarGaleri = $<HTMLUListElement>("daftarGaleri");
 
   function gambarGaleri() {
@@ -194,7 +213,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
       hapus.textContent = "Hapus";
       hapus.setAttribute("aria-label", `Hapus foto galeri ${i + 1}`);
       hapus.addEventListener("click", () => {
-        URL.revokeObjectURL(foto.url);
+        if (foto.blob) URL.revokeObjectURL(foto.url);
         galeri.splice(i, 1);
         gambarGaleri();
         inputGaleri.focus();
@@ -215,7 +234,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
       if (galeri.length >= BATAS.galeri) { lewat++; continue; }
       try {
         const blob = await kecilkan(file, SISI_FOTO_GALERI);
-        galeri.push({ blob, url: URL.createObjectURL(blob) });
+        galeri.push({ blob, url: URL.createObjectURL(blob), path: null });
       } catch {
         gagal.push(file.name);
       }
@@ -235,15 +254,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
   on($("daftarTamu"), "input", () => { $("jumlahTamu").textContent = String(bacaTamu().length); });
 
   // ---------- nomor WhatsApp ----------
-  // Hanya angka, boleh diawali "+". Huruf, spasi, dan tanda lain langsung dibuang saat diketik atau ditempel.
-  const saringTelepon = (v: string) => (v.trim().startsWith("+") ? "+" : "") + v.replace(/\D/g, "");
-  // Aturan sama dengan server (susun.ts): 08xx / 628xx / +628xx, 10-15 digit setelah 62
-  const teleponValid = (v: string) => {
-    let angka = saringTelepon(v).replace(/^\+/, "");
-    if (angka.startsWith("0")) angka = "62" + angka.slice(1);
-    return FORMAT_TELEPON.test(angka);
-  };
-  const PESAN_TELEPON = "Nomor WhatsApp tidak valid. Gunakan angka saja, contoh: 081234567890.";
+  // Hanya angka (boleh diawali "+"): huruf, spasi, dan tanda lain langsung dibuang saat diketik atau ditempel (lib/undangan/singkat.ts)
 
   for (const id of ["singkatTelepon", "telepon"]) {
     const el = $(id);
@@ -327,12 +338,20 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
   // Undangan yang sudah dibuat tetapi fotonya belum selesai diunggah: kirim ulang melanjutkan, tidak membuat undangan baru
   let tertunda: { hasil: HasilBuat; data: NewRow; selesai: Set<string> } | null = null;
 
-  async function postJson<T>(url: string, body: unknown): Promise<ResponseBase<T>> {
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  async function postJson<T>(url: string, body: unknown, method = "POST"): Promise<ResponseBase<T>> {
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.status === 413) throw new ErrorBisnis("Isian terlalu besar. Kurangi daftar tamu, lalu coba lagi.");
     if (!res.ok && res.headers.get("content-type")?.includes("json") !== true) throw new ErrorBisnis("Permintaan ditolak server. Muat ulang halaman, lalu coba lagi.");
     return res.json();
   }
+
+  // Permintaan foto ke server: foto baru diunggah setelah disimpan, foto lama (mode ubah) dipertahankan
+  function specFoto(): SpecFoto {
+    const mempelai = (k: "Wanita" | "Pria") => fotoMempelai[k] ? "baru" as const : fotoLama[k] ? "tetap" as const : null;
+    return { Wanita: mempelai("Wanita"), Pria: mempelai("Pria"), Galeri: galeri.map(g => g.blob ? "baru" as const : { Tetap: g.path! }) };
+  }
+
+  const teksKirim = ubah ? "Simpan perubahan" : "Buat undangan";
 
   function blobUntuk(nama: string): Blob | null {
     if (nama === "wanita") return fotoMempelai.Wanita;
@@ -350,12 +369,12 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
       const blob = blobUntuk(u.Nama);
       if (!blob) throw new ErrorBisnis("Foto yang dipilih berubah. Muat ulang halaman, lalu buat undangan lagi.");
       const { error } = await supabase.storage.from(BUCKET_FOTO).uploadToSignedUrl(u.Path, u.Token, blob, { contentType: "image/jpeg" });
-      if (error) throw new ErrorBisnis("Foto gagal diunggah. Periksa koneksi, lalu tekan Buat undangan lagi untuk melanjutkan.");
+      if (error) throw new ErrorBisnis(`Foto gagal diunggah. Periksa koneksi, lalu tekan ${teksKirim} lagi untuk melanjutkan.`);
       t.selesai.add(u.Nama);
     }
     if (t.hasil.Unggah.length > 0) {
-      tampil("Menerbitkan undangan...");
-      const hasil = await postJson(`/api/undangan/${t.hasil.Slug}/terbit`, { KodeEdit: t.hasil.KodeEdit });
+      tampil("Memeriksa foto...");
+      const hasil = await postJson(`/api/undangan/${t.hasil.Slug}/terbit`, { KodeEdit: t.hasil.KodeEdit ?? ubah?.kodeEdit ?? null });
       if (hasil.Status !== STATUS_SUKSES) throw new ErrorBisnis(hasil.Message);
     }
   }
@@ -377,11 +396,17 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
       }
     }
     if (!navigator.onLine) {
-      tampil("Sedang offline. Isian sudah tersimpan sebagai draf di perangkat ini; buat undangan setelah tersambung ke internet.");
+      tampil(ubah
+        ? "Sedang offline. Simpan perubahan setelah tersambung ke internet; jangan tutup halaman ini."
+        : "Sedang offline. Isian sudah tersimpan sebagai draf di perangkat ini; buat undangan setelah tersambung ke internet.");
       return;
     }
 
-    if (!tertunda && !await Konfirmasi.tanya({
+    if (!tertunda && !await Konfirmasi.tanya(ubah ? {
+      judul: "Simpan perubahan?",
+      teks: "Undangan langsung berubah untuk semua yang membuka link-nya. Alamat, RSVP, dan ucapan tetap.",
+      tombol: "Ya, simpan",
+    } : {
       judul: "Buat undangan sekarang?",
       teks: "Undangan langsung terbit dan bisa dibuka siapa pun yang punya link-nya.",
       tombol: "Ya, buat undangan",
@@ -391,23 +416,21 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     try {
       if (!tertunda) {
         const data = kumpulkanData(acara, rekening, tamu);
-        tampil("Membuat undangan...");
-        const hasil = await postJson<HasilBuat>("/api/undangan", {
-          Kode: kode,
-          Data: data,
-          Foto: { Wanita: !!fotoMempelai.Wanita, Pria: !!fotoMempelai.Pria, JumlahGaleri: galeri.length },
-        });
+        tampil(ubah ? "Menyimpan perubahan..." : "Membuat undangan...");
+        const hasil = ubah
+          ? await postJson<HasilBuat>(`/api/undangan/${ubah.slug}`, { KodeEdit: ubah.kodeEdit, Data: data, Foto: specFoto() }, "PUT")
+          : await postJson<HasilBuat>("/api/undangan", { Kode: kode, Data: data, Foto: specFoto() });
         if (hasil.Status !== STATUS_SUKSES || !hasil.Data) { tampil(hasil.Message); Konfirmasi.gagal(hasil.Message); return; }
         tertunda = { hasil: hasil.Data, data, selesai: new Set() };
       }
       await unggahDanTerbitkan(tertunda);
       const { hasil, data } = tertunda;
       tertunda = null;
-      hapusDraf();
+      if (!ubah) hapusDraf();
       tampilHasil(hasil, data);
-      Konfirmasi.sukses("Undangan berhasil dibuat. Simpan kode edit dan bagikan link-nya.");
+      Konfirmasi.sukses(ubah ? "Perubahan tersimpan." : "Undangan berhasil dibuat. Simpan link edit dan bagikan link undangannya.");
     } catch (err) {
-      const pesan = err instanceof ErrorBisnis ? err.message : "Undangan gagal dibuat. Periksa koneksi, lalu coba lagi.";
+      const pesan = err instanceof ErrorBisnis ? err.message : `${ubah ? "Perubahan gagal disimpan" : "Undangan gagal dibuat"}. Periksa koneksi, lalu coba lagi.`;
       tampil(pesan);
       Konfirmasi.gagal(pesan);
     } finally {
@@ -454,7 +477,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     url.href = hasil.Url;
     url.textContent = hasil.Url;
     $<HTMLAnchorElement>("hasilBuka").href = hasil.Url;
-    $("hasilKode").textContent = hasil.KodeEdit;
+    $("hasilLinkEdit").textContent = hasil.LinkEdit;
     $<HTMLAnchorElement>("hasilWa").href = "https://wa.me/?text=" + encodeURIComponent(`Undangan pernikahan ${pasangan}: ${hasil.Url}`);
 
     if (hasil.Tamu.length > 0) {
@@ -521,9 +544,10 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     try {
       const bersih = bersihkanInput(data, galeri.length, hariIniJakarta());
       const dokumen = susunDokumen(dokumenAwal, data, bersih, {
-        wanita: fotoMempelai.Wanita ? PATH_FOTO_PRATINJAU + "wanita" : null,
-        pria: fotoMempelai.Pria ? PATH_FOTO_PRATINJAU + "pria" : null,
-        galeri: galeri.map((_, i) => `${PATH_FOTO_PRATINJAU}galeri-${i + 1}`),
+        // foto baru: penanda yang diganti URL blob; foto lama: path aslinya
+        wanita: fotoMempelai.Wanita ? PATH_FOTO_PRATINJAU + "wanita" : fotoLama.Wanita,
+        pria: fotoMempelai.Pria ? PATH_FOTO_PRATINJAU + "pria" : fotoLama.Pria,
+        galeri: galeri.map((g, i) => g.blob ? `${PATH_FOTO_PRATINJAU}galeri-${i + 1}` : g.path!),
       });
       html = keHtml(dokumen);
     } catch (err) {
@@ -543,7 +567,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
   let nomorBlob = 0;
   function fotoKunci() {
     const id = (blob: Blob | null) => blob ? (idBlob.get(blob) ?? (idBlob.set(blob, ++nomorBlob), nomorBlob)) : 0;
-    return [id(fotoMempelai.Wanita), id(fotoMempelai.Pria), ...galeri.map(x => id(x.blob))].join(",");
+    return [id(fotoMempelai.Wanita), fotoLama.Wanita, id(fotoMempelai.Pria), fotoLama.Pria, ...galeri.map(x => x.path ?? id(x.blob))].join(",");
   }
 
   function gantiFoto(html: string) {
@@ -556,7 +580,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     };
     if (fotoMempelai.Wanita) ganti("wanita", fotoMempelai.Wanita);
     if (fotoMempelai.Pria) ganti("pria", fotoMempelai.Pria);
-    galeri.forEach((foto, i) => ganti(`galeri-${i + 1}`, foto.blob));
+    galeri.forEach((foto, i) => { if (foto.blob) ganti(`galeri-${i + 1}`, foto.blob); });
     return html;
   }
 
@@ -711,6 +735,8 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
   const FIELD_MEMPELAI = { panggilan: "NamaPanggilan", lengkap: "NamaLengkap", anak: "AnakKe", ayah: "NamaAyah", ibu: "NamaIbu" } as const;
 
   function simpanIsian() {
+    // mode ubah tidak menimpa draf undangan baru di perangkat ini
+    if (ubah) return;
     const data = kumpulkanData(daftarAcara.nilai(), daftarRekening.nilai(), bacaTamu());
     for (const [id, nama] of Object.entries(TEKS_BAWAAN)) {
       const el = $<HTMLTextAreaElement>(id);
@@ -777,51 +803,41 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
 
   on(singkat, "submit", e => {
     e.preventDefault();
-    const wajib: [string, string][] = [
-      ["singkatPria", "Nama mempelai pria"],
-      ["singkatWanita", "Nama mempelai wanita"],
-      ["singkatTelepon", "Nomor WhatsApp"],
-      ["singkatTanggal", "Tanggal acara"],
-      ["singkatJam", "Jam acara"],
-      ["singkatLokasi", "Lokasi acara"],
-    ];
-    for (const [id, label] of wajib) {
-      if (!$(id).value.trim()) {
-        singkatNotice.hidden = false;
-        singkatNotice.textContent = `${label} harus diisi.`;
-        $(id).focus();
-        return;
-      }
-    }
-    if (!teleponValid($("singkatTelepon").value)) {
+    // Aturan dan bentuk draf sama dengan form data utama di beranda (lib/undangan/singkat.ts)
+    const id: Record<keyof IsianSingkat, string> = {
+      pria: "singkatPria", wanita: "singkatWanita", telepon: "singkatTelepon", tanggal: "singkatTanggal", jam: "singkatJam", lokasi: "singkatLokasi",
+    };
+    const isi = Object.fromEntries(Object.entries(id).map(([k, v]) => [k, $(v).value])) as unknown as IsianSingkat;
+    const salah = periksaSingkat(isi);
+    if (salah) {
       singkatNotice.hidden = false;
-      singkatNotice.textContent = PESAN_TELEPON;
-      $("singkatTelepon").focus();
+      singkatNotice.textContent = salah.pesan;
+      $(id[salah.kolom]).focus();
       return;
     }
-
-    // Isi form singkat masuk ke editor: acara pertama mendapat tanggal dan jam, acara kedua tanggalnya saja
-    $("panggilanPria").value = $("singkatPria").value.trim();
-    $("panggilanWanita").value = $("singkatWanita").value.trim();
-    $("telepon").value = $("singkatTelepon").value.trim();
-    $("lokasiNama").value = $("singkatLokasi").value.trim();
-    const [pertama, kedua] = $("daftarAcara").children;
-    if (pertama) {
-      pertama.querySelector<HTMLInputElement>('[data-f="Tanggal"]')!.value = $("singkatTanggal").value;
-      pertama.querySelector<HTMLInputElement>('[data-f="JamMulai"]')!.value = $("singkatJam").value;
-    }
-    if (kedua) kedua.querySelector<HTMLInputElement>('[data-f="Tanggal"]')!.value = $("singkatTanggal").value;
-
+    pulihkanDraf(drafDariSingkat(isi));
     bukaRuang();
     tombolEditor.focus();
   });
 
-  // Sudah pernah mengisi data utama: langsung ke pratinjau dan editor
-  const drafAwal = bacaDraf();
-  if (drafAwal) {
-    pulihkanDraf(drafAwal);
+  if (ubah) {
+    // Mode ubah: editor diisi dari undangan tersimpan, tanpa form singkat dan tanpa draf perangkat
+    pulihkanDraf(ubah.data);
+    $("mulaiUlang").hidden = true;
+    kirim.textContent = teksKirim;
+    $("hasilJudul").textContent = "Perubahan tersimpan";
+    $("hasilEdit").hidden = true;
     bukaRuang();
+    $("buatTagline").textContent = "Pratinjau berubah mengikuti isi editor. Perubahan baru tampil di undangan setelah disimpan.";
+  } else {
+    // Sudah pernah mengisi data utama (di sini atau di beranda): langsung ke pratinjau dan editor
+    const drafAwal = bacaDraf();
+    if (drafAwal) {
+      pulihkanDraf(drafAwal);
+      bukaRuang();
+    }
   }
+  if (galeri.length > 0) gambarGaleri();
 
   return () => {
     ac.abort();

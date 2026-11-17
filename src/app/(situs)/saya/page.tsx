@@ -44,11 +44,10 @@ export default async function Saya() {
                 <div><dt>Tamu hadir</dt><dd>{u.jumlahHadir}</dd></div>
                 <div><dt>Ucapan</dt><dd>{u.jumlahUcapan}</dd></div>
               </dl>
-              {u.terbit && (
-                <div className="buat-aksi">
-                  <a className="btn" href={`/u/${u.slug}`} target="_blank" rel="noopener">Buka undangan</a>
-                </div>
-              )}
+              <div className="buat-aksi">
+                {u.terbit && <a className="btn" href={`/u/${u.slug}`} target="_blank" rel="noopener">Buka undangan</a>}
+                <Link className="btn-ghost saya-ubah" href={`/edit/${u.slug}`}>Ubah</Link>
+              </div>
             </li>
           ))}
         </ul>

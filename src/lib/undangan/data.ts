@@ -11,7 +11,7 @@ import {
 } from "./konstanta";
 import { bersihkanInput, bersihkanNama, NewRow, susunDokumen, TemplateKartu } from "./susun";
 import { hariIni, waktuRelatif } from "../waktu";
-import type { DaftarUcapan, UcapanItem } from "./tipe";
+import type { DaftarUcapan, FotoIsian, IsianUndangan, SpecFoto, UcapanItem } from "./tipe";
 
 const FORMAT_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const HURUF_SLUG = "abcdefghijkmnpqrstuvwxyz23456789";
@@ -122,31 +122,25 @@ export async function kirimRsvp(slug: string, input: { Nama?: unknown; Hadir?: u
   periksa(await supabaseAdmin().from("t_rsvp").insert({ undangan_id: undangan.id, nama, hadir, jumlah }));
 }
 
-// ---------- pembuatan ----------
-export interface FotoDiminta {
-  wanita: boolean;
-  pria: boolean;
-  jumlahGaleri: number;
-}
-
+// ---------- pembuatan dan perubahan ----------
 export interface Unggahan {
-  // "wanita", "pria", atau "galeri-{n}" (n mulai 1)
+  // "wanita", "pria", atau "galeri-{n}" (n = urutan di galeri, mulai 1)
   nama: string;
   path: string;
   token: string;
 }
 
-export interface HasilBuat {
+export interface HasilSimpan {
   slug: string;
-  // Hanya dikembalikan sekali, saat dibuat. DB menyimpan hash-nya saja.
-  kodeEdit: string;
+  // Hanya ada saat dibuat (dikembalikan sekali). DB menyimpan hash-nya saja.
+  kodeEdit: string | null;
   tamu: string[];
   unggah: Unggahan[];
 }
 
 const hashKode = (kode: string) => createHash("sha256").update(kode, "utf8").digest("hex");
 
-// Nama depan wanita-pria + 4 huruf acak, mis. sekar-bimo-k3x9
+// Nama depan wanita-pria + 4 huruf acak, mis. alif-putri-k3x9
 function buatSlug(wanita: string, pria: string): string {
   const bagian = (nama: string) => nama.split(" ")[0].normalize("NFD").replace(/\p{Mn}/gu, "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20);
   const akhiran = Array.from({ length: 4 }, () => HURUF_SLUG[randomInt(HURUF_SLUG.length)]).join("");
@@ -156,14 +150,53 @@ function buatSlug(wanita: string, pria: string): string {
   return hasil.join("-");
 }
 
+interface FotoBaru { nama: string; kunci: string; path: string }
+
+// Permintaan foto -> path di dokumen. Foto "tetap" hanya boleh foto milik undangan ini (lama); sisanya dibuatkan path baru.
+function siapkanFoto(slug: string, spec: SpecFoto | null | undefined, lama: FotoIsian | null) {
+  const baru: FotoBaru[] = [];
+  const pathBaru = (nama: string) => {
+    const kunci = randomBytes(16).toString("hex");
+    const path = `${slug}/${kunci}.jpg`;
+    baru.push({ nama, kunci, path });
+    return PATH_FOTO + path;
+  };
+  const tidakAda = () => { throw new ErrorBisnis("Foto lama tidak ditemukan. Muat ulang halaman, lalu coba lagi."); };
+  const mempelai = (pilih: unknown, nama: string, pathLama: string | null) =>
+    pilih === "baru" ? pathBaru(nama) : pilih === "tetap" ? (pathLama ?? tidakAda()) : null;
+
+  const galeriSpec = Array.isArray(spec?.Galeri) ? spec.Galeri : [];
+  if (galeriSpec.length > JUMLAH_GALERI_MAKS) throw new ErrorBisnis(`Galeri maksimal ${JUMLAH_GALERI_MAKS} foto`);
+  const galeriLama = new Set(lama?.Galeri ?? []);
+  const foto: FotoIsian = {
+    Wanita: mempelai(spec?.Wanita, "wanita", lama?.Wanita ?? null),
+    Pria: mempelai(spec?.Pria, "pria", lama?.Pria ?? null),
+    Galeri: galeriSpec.map((g, i) => {
+      if (g === "baru") return pathBaru(`galeri-${i + 1}`);
+      const tetap = typeof g === "object" && g ? g.Tetap : null;
+      return tetap && galeriLama.has(tetap) ? tetap : tidakAda();
+    }),
+  };
+  return { foto, baru };
+}
+
+async function buatUnggahan(baru: FotoBaru[]): Promise<Unggahan[]> {
+  const db = supabaseAdmin();
+  const hasil: Unggahan[] = [];
+  for (const f of baru) {
+    const { data: url, error } = await db.storage.from(BUCKET_FOTO).createSignedUploadUrl(f.path);
+    if (error || !url) throw new Error(error?.message ?? "Gagal menyiapkan unggahan foto");
+    hasil.push({ nama: f.nama, path: url.path, token: url.token });
+  }
+  return hasil;
+}
+
 // Undangan baru dari template pilihan. Disimpan sebagai Draf sampai foto selesai diunggah (terbitkan).
 // Tanpa foto langsung Terbit. pemilik: pengguna yang login, null untuk tamu tanpa akun.
-export async function buatBaru(kodeTemplate: string, pemilik: Pengguna | null, input: NewRow, foto: FotoDiminta): Promise<HasilBuat> {
+export async function buatBaru(kodeTemplate: string, pemilik: Pengguna | null, input: NewRow, spec: SpecFoto | null): Promise<HasilSimpan> {
   const { kartu, dokumen: dokumenAwal } = await getTemplate(kodeTemplate);
   if (!kartu.gratis && !pemilik) throw new ErrorBisnis(PESAN.TEMPLATE_TERKUNCI);
-  const jumlahGaleri = Math.floor(Number(foto?.jumlahGaleri) || 0);
-  if (jumlahGaleri < 0 || jumlahGaleri > JUMLAH_GALERI_MAKS) throw new ErrorBisnis(`Galeri maksimal ${JUMLAH_GALERI_MAKS} foto`);
-  const data = bersihkanInput(input, jumlahGaleri, hariIni());
+  const data = bersihkanInput(input, Array.isArray(spec?.Galeri) ? spec.Galeri.length : 0, hariIni());
 
   const db = supabaseAdmin();
   let slug = "";
@@ -175,18 +208,8 @@ export async function buatBaru(kodeTemplate: string, pemilik: Pengguna | null, i
   }
 
   // Foto disimpan di Storage: {slug}/{kunci}.jpg, ditampilkan lewat /foto/{slug}/{kunci}.jpg
-  const daftarFoto: { nama: string; kunci: string; path: string }[] = [];
-  const siapkan = (nama: string) => {
-    const kunci = randomBytes(16).toString("hex");
-    const path = `${slug}/${kunci}.jpg`;
-    daftarFoto.push({ nama, kunci, path });
-    return PATH_FOTO + path;
-  };
-  const pathWanita = foto?.wanita ? siapkan("wanita") : null;
-  const pathPria = foto?.pria ? siapkan("pria") : null;
-  const pathGaleri = Array.from({ length: jumlahGaleri }, (_, i) => siapkan(`galeri-${i + 1}`));
-
-  const dokumen = susunDokumen(dokumenAwal, input, data, { wanita: pathWanita, pria: pathPria, galeri: pathGaleri });
+  const { foto, baru } = siapkanFoto(slug, spec, null);
+  const dokumen = susunDokumen(dokumenAwal, input, data, { wanita: foto.Wanita, pria: foto.Pria, galeri: foto.Galeri });
   const kodeEdit = randomBytes(32).toString("base64url");
 
   const baris = periksa(await db.from("t_undangan").insert({
@@ -194,27 +217,77 @@ export async function buatBaru(kodeTemplate: string, pemilik: Pengguna | null, i
     kode_edit_hash: hashKode(kodeEdit),
     template_kode: kartu.kode,
     dokumen,
-    status: daftarFoto.length > 0 ? EStatusUndangan.Draf : EStatusUndangan.Terbit,
+    isian: { Data: input, Foto: foto },
+    status: baru.length > 0 ? EStatusUndangan.Draf : EStatusUndangan.Terbit,
     pemilik_id: pemilik?.id ?? null,
   }).select("id").single()) as { id: number };
 
   try {
-    if (daftarFoto.length > 0)
-      periksa(await db.from("t_undangan_foto").insert(daftarFoto.map(f => ({ undangan_id: baris.id, kunci: f.kunci, path: f.path }))));
+    if (baru.length > 0)
+      periksa(await db.from("t_undangan_foto").insert(baru.map(f => ({ undangan_id: baris.id, kunci: f.kunci, path: f.path }))));
     if (data.tamu.length > 0)
       periksa(await db.from("t_undangan_tamu").insert(data.tamu.map(nama => ({ undangan_id: baris.id, nama }))));
-
-    const unggah: Unggahan[] = [];
-    for (const f of daftarFoto) {
-      const { data: url, error } = await db.storage.from(BUCKET_FOTO).createSignedUploadUrl(f.path);
-      if (error || !url) throw new Error(error?.message ?? "Gagal menyiapkan unggahan foto");
-      unggah.push({ nama: f.nama, path: url.path, token: url.token });
-    }
-    return { slug, kodeEdit, tamu: data.tamu, unggah };
+    return { slug, kodeEdit, tamu: data.tamu, unggah: await buatUnggahan(baru) };
   } catch (e) {
     await db.from("t_undangan").delete().eq("id", baris.id);
     throw e;
   }
+}
+
+interface BarisUbah { id: number; slug: string; status: number; template_kode: string; isian: { Data: NewRow; Foto: FotoIsian } | null }
+
+// Hanya pemilik (login) atau pemegang kode edit. Selain itu dianggap tidak ada, supaya keberadaan slug tidak bocor.
+async function barisDiizinkan(slug: string, pengguna: Pengguna | null, kodeEdit: unknown): Promise<BarisUbah> {
+  const s = (slug ?? "").trim().toLowerCase();
+  const tidakAda = new ErrorTidakAda(PESAN.TIDAK_DITEMUKAN("Undangan"));
+  if (s.length > 60 || !FORMAT_SLUG.test(s)) throw tidakAda;
+  const row = periksa(await supabaseAdmin().from("t_undangan")
+    .select("id, slug, status, template_kode, isian, pemilik_id, kode_edit_hash").eq("slug", s).maybeSingle());
+  if (!row) throw tidakAda;
+  const pemilik = pengguna != null && row.pemilik_id === pengguna.id;
+  const punyaKode = typeof kodeEdit === "string" && kodeEdit.length > 0 && row.kode_edit_hash === hashKode(kodeEdit);
+  if (!pemilik && !punyaKode) throw tidakAda;
+  return row as BarisUbah;
+}
+
+// Isian form untuk mengisi editor mode ubah
+export async function getIsian(slug: string, pengguna: Pengguna | null, kodeEdit: unknown): Promise<IsianUndangan> {
+  const row = await barisDiizinkan(slug, pengguna, kodeEdit);
+  if (!row.isian) throw new ErrorBisnis("Undangan ini dibuat sebelum fitur ubah tersedia, jadi isiannya tidak bisa dibuka di editor.");
+  return { Slug: row.slug, TemplateKode: row.template_kode, Data: row.isian.Data, Foto: row.isian.Foto };
+}
+
+// Ubah undangan: dokumen disusun ulang dari template dan isian baru. Alamat (slug), kode edit, RSVP, dan ucapan tetap.
+// Foto lama yang tidak dipakai lagi dihapus; foto baru diunggah browser lalu diperiksa lewat terbitkan().
+export async function ubah(slug: string, pengguna: Pengguna | null, kodeEdit: unknown, input: NewRow, spec: SpecFoto | null): Promise<HasilSimpan> {
+  const row = await barisDiizinkan(slug, pengguna, kodeEdit);
+  if (!row.isian) throw new ErrorBisnis("Undangan ini dibuat sebelum fitur ubah tersedia, jadi tidak bisa diubah lewat editor.");
+  const { dokumen: dokumenAwal } = await getTemplate(row.template_kode);
+  const data = bersihkanInput(input, Array.isArray(spec?.Galeri) ? spec.Galeri.length : 0, hariIni());
+
+  const lama = row.isian.Foto;
+  const { foto, baru } = siapkanFoto(row.slug, spec, lama);
+  const dokumen = susunDokumen(dokumenAwal, input, data, { wanita: foto.Wanita, pria: foto.Pria, galeri: foto.Galeri });
+
+  const db = supabaseAdmin();
+  if (baru.length > 0)
+    periksa(await db.from("t_undangan_foto").insert(baru.map(f => ({ undangan_id: row.id, kunci: f.kunci, path: f.path }))));
+  const unggah = await buatUnggahan(baru);
+
+  periksa(await db.from("t_undangan").update({ dokumen, isian: { Data: input, Foto: foto }, upd_date: new Date().toISOString() }).eq("id", row.id));
+  periksa(await db.from("t_undangan_tamu").delete().eq("undangan_id", row.id));
+  if (data.tamu.length > 0)
+    periksa(await db.from("t_undangan_tamu").insert(data.tamu.map(nama => ({ undangan_id: row.id, nama }))));
+
+  // Foto lama yang dilepas: hapus file dan barisnya
+  const dipakai = new Set([foto.Wanita, foto.Pria, ...foto.Galeri].filter(Boolean));
+  const dilepas = [lama.Wanita, lama.Pria, ...lama.Galeri].filter((p): p is string => !!p && !dipakai.has(p)).map(p => p.slice(PATH_FOTO.length));
+  if (dilepas.length > 0) {
+    await db.storage.from(BUCKET_FOTO).remove(dilepas);
+    periksa(await db.from("t_undangan_foto").delete().eq("undangan_id", row.id).in("path", dilepas));
+  }
+
+  return { slug: row.slug, kodeEdit: null, tamu: data.tamu, unggah };
 }
 
 // Tipe ditentukan dari isi file, bukan dari header kiriman browser. Null bila bukan JPG, PNG, atau WebP.
@@ -226,14 +299,11 @@ function kenaliFoto(b: Uint8Array): string | null {
   return null;
 }
 
-// Setelah semua foto terunggah: periksa isi tiap file, lalu undangan Terbit. Hanya pembuat (pemegang kode edit) yang boleh.
-export async function terbitkan(slug: string, kodeEdit: unknown): Promise<void> {
-  if (typeof kodeEdit !== "string" || !FORMAT_SLUG.test(slug ?? "")) throw new ErrorTidakAda(PESAN.TIDAK_DITEMUKAN("Undangan"));
+// Setelah foto terunggah (dibuat atau diubah): periksa isi tiap file, lalu undangan Terbit.
+// Hanya pemilik atau pemegang kode edit. Foto yang bukan gambar dihapus.
+export async function terbitkan(slug: string, pengguna: Pengguna | null, kodeEdit: unknown): Promise<void> {
+  const row = await barisDiizinkan(slug, pengguna, kodeEdit);
   const db = supabaseAdmin();
-  const row = periksa(await db.from("t_undangan").select("id, status, kode_edit_hash").eq("slug", slug).maybeSingle());
-  if (!row || row.kode_edit_hash !== hashKode(kodeEdit)) throw new ErrorTidakAda(PESAN.TIDAK_DITEMUKAN("Undangan"));
-  if (row.status === EStatusUndangan.Terbit) return;
-
   const fotos = periksa(await db.from("t_undangan_foto").select("path").eq("undangan_id", row.id)) as { path: string }[];
   // Hanya 16 byte pertama yang dibaca (Range), cukup untuk mengenali tipe file
   for (const f of fotos) {
@@ -244,7 +314,8 @@ export async function terbitkan(slug: string, kodeEdit: unknown): Promise<void> 
       throw new ErrorBisnis("Foto harus berformat JPG, PNG, atau WebP");
     }
   }
-  periksa(await db.from("t_undangan").update({ status: EStatusUndangan.Terbit, upd_date: new Date().toISOString() }).eq("id", row.id));
+  if (row.status !== EStatusUndangan.Terbit)
+    periksa(await db.from("t_undangan").update({ status: EStatusUndangan.Terbit, upd_date: new Date().toISOString() }).eq("id", row.id));
 }
 
 // ---------- dasbor ----------
