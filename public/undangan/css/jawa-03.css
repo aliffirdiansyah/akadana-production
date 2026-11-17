@@ -1,0 +1,12 @@
+/* Template undangan "jawa-03" (Adat Jawa — Marun & Prada): tata letak jawa-01 dengan warna lain. */
+@import url("jawa-01.css");
+
+:root {
+  --uj-sogan: #7a1f2b;
+  --uj-sogan-tua: #3d0f14;
+  --uj-merah: #7a1f2b;
+  --uj-krem: #f7e6dd;
+  --uj-kertas: #fdf6f1;
+  --uj-teks: #3d1a1c;
+  --uj-teks-lembut: #7d5a58;
+}

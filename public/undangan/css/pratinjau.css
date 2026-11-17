@@ -1,0 +1,24 @@
+/* Bar pratinjau template (/undangan/contoh/{kode}). Dimuat setelah CSS template, warna netral supaya cocok di semua template. */
+.pratinjau-bar {
+  position: fixed; left: 50%; bottom: 12px; z-index: 30; transform: translateX(-50%);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  width: calc(100% - 24px); max-width: 560px; padding: 12px 14px;
+  background: #15181b; color: #f4f4f2; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  font: 400 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.pratinjau-teks { display: flex; flex-direction: column; min-width: 0; }
+.pratinjau-teks strong { font-size: 14px; font-weight: 700; }
+.pratinjau-teks span { color: #b9bcbf; }
+.pratinjau-aksi { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.pratinjau-aksi a {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px;
+  font-weight: 700; text-decoration: none; white-space: nowrap;
+}
+.pratinjau-kembali { color: #f4f4f2; border: 1px solid #5b6064; }
+.pratinjau-kembali:hover { background: #2a2e32; }
+.pratinjau-pakai { background: #f4f4f2; color: #15181b; }
+.pratinjau-pakai:hover { background: #ffffff; }
+.pratinjau-aksi a:focus-visible { outline: 2px solid #f4f4f2; outline-offset: 2px; }
+/* ruang di bawah supaya bar tidak menutupi isi terakhir dan tombol buka di sampul */
+.undangan { padding-bottom: 96px; }
+.sampul-isi { padding-bottom: 150px; overflow-y: auto; }

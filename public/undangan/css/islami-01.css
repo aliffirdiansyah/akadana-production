@@ -1,0 +1,63 @@
+/* Template undangan "islami-01" (Islami — Zamrud & Emas). Komponen dasar dari jawa-01.css, lalu ditimpa:
+   warna zamrud, motif bintang geometris, ornamen lengkung. Perubahan jawa-01.css ikut berpengaruh ke sini. */
+@import url("jawa-01.css");
+@import url("https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Marcellus&display=swap");
+
+:root {
+  --uj-sogan: #0f4c3f;
+  --uj-sogan-tua: #0a2f28;
+  --uj-prada: #c9a24a;
+  --uj-prada-muda: #ecd9a0;
+  --uj-merah: #0f4c3f;
+  --uj-krem: #eef3ee;
+  --uj-kertas: #fbfcf8;
+  --uj-teks: #16332b;
+  --uj-teks-lembut: #4f6a63;
+  --uj-emas-tua: #806420;
+
+  --uj-font-judul: "Amiri", Georgia, serif;
+  --uj-font-label: "Marcellus", Georgia, serif;
+  --uj-font-nama: "Amiri", Georgia, serif;
+
+  --uj-kawung: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cg fill='none' stroke='%23c9a24a' stroke-opacity='.2' stroke-width='1'%3E%3Crect x='12' y='12' width='24' height='24'/%3E%3Crect x='12' y='12' width='24' height='24' transform='rotate(45 24 24)'/%3E%3Cpath d='M0 0 L7 7 M48 0 L41 7 M0 48 L7 41 M48 48 L41 41'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.label { font: 400 13px/1.4 var(--uj-font-label); letter-spacing: .2em; color: var(--uj-emas-tua); }
+.sec.gelap .label, .sampul .label { color: var(--uj-prada); }
+.judul { font: 700 34px/1.2 var(--uj-font-judul); }
+.nama { font: 700 44px/1.15 var(--uj-font-nama); }
+.basa { font: 400 22px/1.6 var(--uj-font-judul); }
+.terjemah { font: italic 400 16px/1.6 var(--uj-font-judul); }
+
+.tombol { font: 400 13px/1 var(--uj-font-label); letter-spacing: .12em; }
+.tombol:hover { background: var(--uj-sogan-tua); }
+
+.hias { display: block; width: 84px; height: 104px; margin: 0 auto 14px; color: var(--uj-prada); }
+.sampul .hias { width: 104px; height: 130px; }
+.sampul .nama { font-size: 50px; }
+.sampul .dan { font: 400 26px var(--uj-font-judul); margin: 2px 0; }
+.kepada strong { font: 700 24px/1.3 var(--uj-font-judul); }
+
+.foto-bulat { font: 700 64px/1 var(--uj-font-nama); }
+.mempelai .nama-lengkap { font: 700 20px/1.3 var(--uj-font-judul); }
+.mempelai .ampersand { font: 400 44px/1 var(--uj-font-nama); }
+
+.mundur div { background: rgba(10,47,40,.4); }
+.mundur b { font: 700 30px/1 var(--uj-font-judul); }
+.mundur span { font: 400 11px var(--uj-font-label); }
+
+.lini h3 { font: 700 23px/1.2 var(--uj-font-judul); }
+.lini .waktu { font: 400 13px var(--uj-font-label); letter-spacing: .06em; }
+.lokasi h3 { font: 700 23px var(--uj-font-judul); }
+
+.galeri-grid div:nth-child(3n) { background: linear-gradient(200deg, var(--uj-krem), var(--uj-sogan)); }
+
+.form-tamu label, .label-form { font: 400 12px var(--uj-font-label); }
+.pesan.gagal { background: rgba(178,59,46,.1); color: #9c2f24; }
+.sec.gelap .pesan.gagal { background: rgba(244,180,164,.14); color: #f4b4a4; }
+
+.daftar-ucapan b { font: 700 18px var(--uj-font-judul); }
+.kartu-rek .bank { font: 400 13px var(--uj-font-label); }
+.kartu-rek .norek { font: 700 25px/1.3 var(--uj-font-judul); }
+
+.penutup .nama { font-size: 40px; }

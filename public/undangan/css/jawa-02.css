@@ -1,0 +1,12 @@
+/* Template undangan "jawa-02" (Adat Jawa — Hijau Sirih & Prada): tata letak jawa-01 dengan warna lain. */
+@import url("jawa-01.css");
+
+:root {
+  --uj-sogan: #1f5b4a;
+  --uj-sogan-tua: #12332a;
+  --uj-merah: #7a1f1f;
+  --uj-krem: #e6f0ea;
+  --uj-kertas: #f6faf6;
+  --uj-teks: #17352b;
+  --uj-teks-lembut: #4f6d62;
+}
