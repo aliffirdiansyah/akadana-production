@@ -6,7 +6,7 @@ import { FormSingkat } from "@/components/FormSingkat";
 import { NavGelap } from "@/components/NavGelap";
 import { hariIni } from "@/lib/waktu";
 import { DaftarTemplate } from "@/components/DaftarTemplate";
-import { getTemplateList } from "@/lib/undangan/data";
+import { getTemplateList, hitungMilik } from "@/lib/undangan/data";
 import { getPengguna } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +24,7 @@ const FITUR = [
 
 export default async function Katalog() {
   const [daftar, pengguna] = await Promise.all([getTemplateList(), getPengguna()]);
+  const jumlahMilik = pengguna ? await hitungMilik(pengguna) : 0;
   const sudahLogin = pengguna != null;
   const gratis = daftar.find(t => t.gratis);
   // Form data utama membuka editor template ini; template bisa diganti dari editor tanpa kehilangan isian
@@ -112,10 +113,23 @@ export default async function Katalog() {
         // Pengguna login: fokus mengisi, form di tengah layar. Template dipilih dari editor (/template).
         <section className="wrap beranda-fokus" aria-labelledby="judulBeranda">
           <header className="beranda-fokus-kepala">
-            <h1 className="brand" id="judulBeranda">Undangan digital</h1>
-            <p className="tagline">Isi data utama untuk membuat undangan baru, atau ubah undangan yang sudah ada di <Link href="/saya">Undangan saya</Link>.</p>
+            <p className="beranda-fokus-eyebrow"><span aria-hidden="true">✦</span> Undangan digital</p>
+            <h1 className="brand" id="judulBeranda">Buat undangan baru</h1>
+            <p className="tagline">Isi data utama, lalu lengkapi detailnya sambil melihat pratinjau.</p>
           </header>
           <FormSingkat kodeTemplate={tujuan} hariIni={hariIni()} />
+          {/* Pintasan ke dasbor: kartu berikon dengan jumlah undangan, bukan tautan teks */}
+          <Link className="beranda-pintas" href="/saya">
+            <span className="beranda-pintas-ikon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="m3 8 9 6 9-6" /></svg>
+            </span>
+            <span className="beranda-pintas-teks">
+              <strong>Undangan saya</strong>
+              <span>{jumlahMilik > 0 ? `${jumlahMilik} undangan · ubah, lihat konfirmasi dan ucapan tamu` : "Undangan yang sudah dibuat tampil di sini"}</span>
+            </span>
+            {jumlahMilik > 0 && <span className="beranda-pintas-jumlah" aria-hidden="true">{jumlahMilik}</span>}
+            <svg className="beranda-pintas-panah" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </Link>
         </section>
       ) : (
         <div className="wrap ud-template" id="template">

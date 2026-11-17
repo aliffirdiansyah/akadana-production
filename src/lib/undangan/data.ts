@@ -328,6 +328,13 @@ export async function terbitkan(slug: string, pengguna: Pengguna | null, kodeEdi
 
 // ---------- dasbor ----------
 // Undangan yang dibuat pengguna saat login, terbaru dulu, dengan ringkasan RSVP dan ucapan
+// Jumlah undangan milik pengguna (untuk pintasan di beranda), tanpa memuat isinya
+export async function hitungMilik(pengguna: Pengguna): Promise<number> {
+  const { count, error } = await supabaseAdmin().from("t_undangan").select("id", { count: "exact", head: true }).eq("pemilik_id", pengguna.id);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 export async function getMilik(pengguna: Pengguna): Promise<UndanganMilik[]> {
   const db = supabaseAdmin();
   const rows = periksa(await db.from("t_undangan")

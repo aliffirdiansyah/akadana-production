@@ -118,3 +118,29 @@ input[aria-invalid="true"] { border-color: var(--danger); }
   .sy-ringkas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .sy-btn { transition: none; } }
+
+/* Beranda pengguna login: judul fokus + kartu pintasan ke Undangan saya */
+.beranda-fokus-eyebrow { margin: 0 0 6px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.beranda-pintas {
+  display: flex; align-items: center; gap: 14px; width: 100%; max-width: 560px; padding: 14px 16px;
+  color: var(--ink); text-decoration: none; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px;
+  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.beranda-pintas:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0, 0, 0, .12); }
+.beranda-pintas:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.beranda-pintas-ikon {
+  flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px;
+  background: var(--accent-soft); color: var(--accent);
+}
+.beranda-pintas svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.beranda-pintas-teks { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.35; }
+.beranda-pintas-teks strong { font-size: 15px; }
+.beranda-pintas-teks span { font-size: 13px; color: var(--muted); }
+.beranda-pintas-jumlah {
+  flex: none; min-width: 28px; height: 28px; padding: 0 8px; display: grid; place-items: center;
+  border-radius: 999px; background: var(--gold-soft); color: var(--gold); font-weight: 700; font-size: 13px;
+}
+.beranda-pintas-panah { flex: none; color: var(--accent); transition: transform .15s ease; }
+.beranda-pintas:hover .beranda-pintas-panah { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) { .beranda-pintas, .beranda-pintas-panah { transition: none; } .beranda-pintas:hover { transform: none; } }
