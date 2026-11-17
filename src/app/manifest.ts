@@ -4,8 +4,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Inviora",
-    short_name: "Inviora",
+    name: "Akadana",
+    short_name: "Akadana",
     description: "Buat undangan pernikahan digital, lihat pratinjaunya langsung, lalu bagikan lewat WhatsApp.",
     lang: "id",
     dir: "ltr",
@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/ikon/ikon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/ikon/ikon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/ikon/ikon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-      { src: "/img/logo/inviora-ikon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/img/logo/akadana-ikon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
     ],
     shortcuts: [
       { name: "Pilih template", url: "/template", icons: [{ src: "/ikon/ikon-192.png", sizes: "192x192" }] },

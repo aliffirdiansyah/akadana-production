@@ -1,4 +1,4 @@
-# Inviora
+# Akadana
 
 Generator undangan pernikahan digital, disiapkan sebagai PWA.
 Stack: Next.js 16 (App Router, TypeScript), Supabase (Postgres, Auth, Storage), deploy di Vercel.
@@ -21,7 +21,7 @@ npm run dev                    # http://localhost:3000
 ```
 
 Service worker tidak dipasang di `localhost:3000` supaya tidak mengganggu hot reload. Untuk mencoba PWA:
-`npm run build && npm start`, atau set `localStorage.inviora_sw_dev = "1"`.
+`npm run build && npm start`, atau set `localStorage.akadana_sw_dev = "1"`.
 
 ## Menyiapkan Supabase
 
@@ -30,7 +30,7 @@ Service worker tidak dipasang di `localhost:3000` supaya tidak mengganggu hot re
    - `supabase/migrations/20261117000001_skema.sql`: tabel, RLS, dan bucket Storage `undangan-foto`.
    - `supabase/migrations/20261117000002_seed_template.sql`: lima template + undangan contoh `/u/contoh-alif-putri`.
 3. Login Google (satu-satunya cara masuk):
-   1. Google Cloud Console > APIs & Services > OAuth consent screen: isi nama aplikasi (Inviora) dan email dukungan.
+   1. Google Cloud Console > APIs & Services > OAuth consent screen: isi nama aplikasi (Akadana) dan email dukungan.
    2. Credentials > Create credentials > OAuth client ID > Web application.
       **Authorized redirect URIs**: `https://<project-ref>.supabase.co/auth/v1/callback` (Supabase menampilkannya di halaman provider Google).
    3. Supabase > Authentication > Sign In / Providers > **Google**: aktifkan, isi Client ID dan Client Secret.

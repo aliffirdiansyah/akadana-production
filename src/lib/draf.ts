@@ -3,7 +3,7 @@
 // Satu draf dipakai bersama semua template; foto tidak ikut disimpan. Bisa dibaca dan ditulis tanpa koneksi (PWA).
 import type { NewRow } from "./undangan/susun";
 
-const KUNCI = "inviora_draf";
+const KUNCI = "akadana_draf";
 // Draf yang tidak diubah selama ini diabaikan
 const UMUR_HARI = 90;
 const UKURAN_MAKS = 256 * 1024;

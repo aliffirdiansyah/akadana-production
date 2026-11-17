@@ -53,7 +53,7 @@ export function IsiUndangan({ dokumen, templateKode, slug, namaTamu, ucapan, pra
 
       <main className="undangan" id="undangan" data-url={`/api/u/${slug}`} data-pratinjau={pratinjau ?? undefined}>
         {tampil.filter(x => x !== sampul).map(section => <Section key={section.id} section={section} k={k} />)}
-        <footer className="kaki">Dibuat dengan Inviora</footer>
+        <footer className="kaki">Dibuat dengan Akadana</footer>
       </main>
     </>
   );

@@ -1,4 +1,4 @@
-// Service worker Inviora. Ditulis tangan (tanpa Workbox) supaya aturannya jelas:
+// Service worker Akadana. Ditulis tangan (tanpa Workbox) supaya aturannya jelas:
 // - Navigasi halaman: network-first, salinan terakhir disimpan; offline -> salinan, atau /offline.
 //   /buat/* ikut disimpan, jadi form pembuatan yang pernah dibuka tetap bisa diisi tanpa internet (draf di localStorage).
 // - Aset build Next (/_next/static, nama berisi hash): cache-first.

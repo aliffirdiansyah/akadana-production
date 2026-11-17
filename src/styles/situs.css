@@ -83,7 +83,7 @@
 
 /* Beranda (landing): palet sendiri, hanya di halaman ini. Kalkulator dan back office tetap memakai token site.css. */
 
-.beranda, .navbar-gelap, .pl-kenal, .pl-dasbor, .db-hero, .vd-hero {
+.beranda, .navbar-gelap, .pl-kenal, .pl-dasbor, .db-hero, .vd-hero, .sy-hero {
   --br-malam: #14322a;     /* hijau sirih tua, latar hero */
   --br-malam-teks: #e9efe9;
   --br-malam-redup: #a9bdb2;
@@ -333,18 +333,18 @@ body:has(.akun-masuk) { padding-bottom: 0; }
 }
 
 /* ---------- SweetAlert2 (Scripts/Komponen/Konfirmasi.js) ---------- */
-.swal2-popup.inviora-swal {
+.swal2-popup.akadana-swal {
   font-family: var(--font-body); background: var(--surface); color: var(--ink);
   border: 1px solid var(--line); border-radius: 16px; padding: 22px 20px 20px;
 }
-.inviora-swal .swal2-title { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: var(--ink); }
-.inviora-swal .swal2-html-container { color: var(--muted); font-size: 15px; line-height: 1.55; }
-.inviora-swal .swal2-actions { gap: 10px; }
-.inviora-swal .swal2-styled { margin: 0; border-radius: 999px; padding: 10px 20px; font-weight: 600; font-size: 14.5px; }
-.inviora-swal .swal2-styled:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
-.inviora-swal .swal2-cancel { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--line); }
-.inviora-swal .swal2-cancel:hover { background: var(--bg) !important; }
-.inviora-swal .swal2-timer-progress-bar { background: var(--accent); }
+.akadana-swal .swal2-title { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: var(--ink); }
+.akadana-swal .swal2-html-container { color: var(--muted); font-size: 15px; line-height: 1.55; }
+.akadana-swal .swal2-actions { gap: 10px; }
+.akadana-swal .swal2-styled { margin: 0; border-radius: 999px; padding: 10px 20px; font-weight: 600; font-size: 14.5px; }
+.akadana-swal .swal2-styled:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
+.akadana-swal .swal2-cancel { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--line); }
+.akadana-swal .swal2-cancel:hover { background: var(--bg) !important; }
+.akadana-swal .swal2-timer-progress-bar { background: var(--accent); }
 .swal2-container.swal2-backdrop-show { background: rgb(15 25 20 / .45); }
 
 /* Wedding planner untuk pengunjung belum login (Views/Planner/Kenalan). Hero memakai palet beranda (--br-*). */

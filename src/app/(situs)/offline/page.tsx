@@ -1,7 +1,7 @@
 // Ditampilkan service worker (public/sw.js) saat halaman yang diminta belum tersimpan dan perangkat offline.
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Offline | Inviora" };
+export const metadata: Metadata = { title: "Offline | Akadana" };
 export const dynamic = "force-static";
 
 export default function Offline() {

@@ -2,7 +2,7 @@
 import sharp from "sharp";
 import { readFile, writeFile } from "node:fs/promises";
 
-const svg = await readFile("public/img/logo/inviora-ikon.svg", "utf8");
+const svg = await readFile("public/img/logo/akadana-ikon.svg", "utf8");
 // Versi persegi penuh tanpa sudut membulat (sistem operasi memotong sendiri)
 const penuh = svg.replace('rx="14" ', "");
 // Maskable: tanda di zona aman 80% tengah, latar memenuhi kanvas

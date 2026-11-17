@@ -8,7 +8,7 @@ import { hariIni } from "@/lib/waktu";
 import { FormBuat } from "../../buat/[kode]/FormBuat";
 import { BukaEdit } from "./BukaEdit";
 
-export const metadata: Metadata = { title: "Ubah Undangan | Inviora", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Ubah Undangan | Akadana", robots: { index: false, follow: false } };
 
 export default async function HalamanEdit({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

@@ -15,7 +15,7 @@ interface DataEdit {
   Awal: IsiAwal;
 }
 
-const kunciSesi = (slug: string) => `inviora_kode_edit_${slug}`;
+const kunciSesi = (slug: string) => `akadana_kode_edit_${slug}`;
 
 // Kode dari "#kode=..." atau dari link edit lengkap yang ditempel
 function ambilKode(teks: string): string | null {

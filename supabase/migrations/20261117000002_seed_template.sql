@@ -1,4 +1,4 @@
--- Lima template undangan Inviora. Semua nama, tanggal, alamat dan rekening di isi contoh fiktif.
+-- Lima template undangan Akadana. Semua nama, tanggal, alamat dan rekening di isi contoh fiktif.
 -- Template aktif dengan urutan terendah (jawa-01) gratis; sisanya wajib login. Aman dijalankan ulang: isi template ditimpa.
 -- CSS tiap template: public/undangan/css/{kode}.css. Simbol SVG: src/components/undangan/SimbolTemplate.tsx.
 BEGIN;

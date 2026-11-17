@@ -2,7 +2,7 @@
 
 # CLAUDE.md
 
-Inviora: generator undangan pernikahan digital (Next.js 16 + Supabase, untuk Vercel dan sebagai PWA. Identifier, pesan error, dan teks UI berbahasa Indonesia; pertahankan.
+Akadana: generator undangan pernikahan digital (Next.js 16 + Supabase, untuk Vercel dan sebagai PWA. Identifier, pesan error, dan teks UI berbahasa Indonesia; pertahankan.
 Cara menjalankan, setup Supabase, dan deploy: `README.md`.
 
 ## Perintah
@@ -12,7 +12,7 @@ npm run dev        # http://localhost:3000
 npm run build      # wajib lolos sebelum selesai
 npm run lint
 npm run typecheck
-npm run ikon       # buat ulang ikon PWA dari public/img/logo/inviora-ikon.svg
+npm run ikon       # buat ulang ikon PWA dari public/img/logo/akadana-ikon.svg
 ```
 
 Tidak ada test project. Next.js 16 berbeda dari versi lama (mis. `src/proxy.ts` menggantikan middleware, `params` berupa Promise):

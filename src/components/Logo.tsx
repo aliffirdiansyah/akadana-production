@@ -1,4 +1,4 @@
-// Logo Inviora: tanda dua cincin + tulisan "inviora". Warna dari CSS (.logo-*), jadi ikut varian navbar terang/gelap.
+// Logo Akadana: tanda dua cincin + tulisan "akadana" ("akad" hijau, "ana" emas). Warna dari CSS (.logo-*), jadi ikut varian navbar terang/gelap.
 // Versi file ada di public/img/logo/.
 export function Logo() {
   return (
@@ -9,7 +9,7 @@ export function Logo() {
         <circle className="logo-emas" cx="38" cy="30" r="13" />
         <path className="logo-kiri" d="M32.65 37.46A13 13 0 0 1 26.45 42.22" />
       </svg>
-      <span className="logo-teks">invi<span>o</span>ra</span>
+      <span className="logo-teks">akad<span>ana</span></span>
     </span>
   );
 }

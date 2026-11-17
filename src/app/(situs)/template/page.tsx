@@ -4,7 +4,7 @@ import { DaftarTemplate } from "@/components/DaftarTemplate";
 import { getTemplateList } from "@/lib/undangan/data";
 import { getPengguna } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Pilih Template | Inviora" };
+export const metadata: Metadata = { title: "Pilih Template | Akadana" };
 export const dynamic = "force-dynamic";
 
 export default async function HalamanTemplate() {

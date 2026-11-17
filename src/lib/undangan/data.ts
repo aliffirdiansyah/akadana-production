@@ -28,7 +28,15 @@ export interface UndanganMilik {
   judul: string;
   deskripsi: string | null;
   templateNama: string;
+  templateKode: string;
+  // Isi sampul, untuk gambar mini kartu dasbor
+  label: string;
+  nama1: string;
+  nama2: string;
+  // Waktu acara utama (ISO dengan offset) dari section hitung mundur; null bila belum bertanggal
+  mulai: string | null;
   terbit: boolean;
+  bisaDiubah: boolean;
   insDate: string;
   jumlahRsvp: number;
   jumlahHadir: number;
@@ -323,18 +331,25 @@ export async function terbitkan(slug: string, pengguna: Pengguna | null, kodeEdi
 export async function getMilik(pengguna: Pengguna): Promise<UndanganMilik[]> {
   const db = supabaseAdmin();
   const rows = periksa(await db.from("t_undangan")
-    .select("id, slug, dokumen, status, ins_date, m_template(nama), t_rsvp(hadir, jumlah), t_ucapan(count)")
+    .select("id, slug, dokumen, status, ins_date, template_kode, isian_ada:isian->Data->Wanita, m_template(nama), t_rsvp(hadir, jumlah), t_ucapan(count)")
     .eq("pemilik_id", pengguna.id).order("ins_date", { ascending: false }).order("id", { ascending: false })) as unknown as {
-      slug: string; dokumen: unknown; status: number; ins_date: string; m_template: { nama: string } | null;
-      t_rsvp: { hadir: boolean; jumlah: number }[]; t_ucapan: { count: number }[];
+      slug: string; dokumen: unknown; status: number; ins_date: string; template_kode: string; isian_ada: unknown;
+      m_template: { nama: string } | null; t_rsvp: { hadir: boolean; jumlah: number }[]; t_ucapan: { count: number }[];
     }[];
   return rows.map(x => {
     const dokumen = parseDokumen(x.dokumen);
+    const sampul = isiPertama(dokumen, "sampul");
     return {
       slug: x.slug,
       judul: dokumen.meta.judul,
       deskripsi: dokumen.meta.deskripsi ?? null,
       templateNama: x.m_template?.nama ?? "",
+      templateKode: x.template_kode,
+      label: sampul?.label ?? "",
+      nama1: sampul?.nama1 ?? "",
+      nama2: sampul?.nama2 ?? "",
+      mulai: cariSection(dokumen, "hitung-mundur")?.isi.mulai ?? null,
+      bisaDiubah: x.isian_ada != null,
       terbit: x.status === EStatusUndangan.Terbit,
       insDate: x.ins_date,
       jumlahRsvp: x.t_rsvp.length,

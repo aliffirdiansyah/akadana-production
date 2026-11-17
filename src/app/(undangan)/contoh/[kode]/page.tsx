@@ -24,7 +24,7 @@ const ambil = cache(async (kode: string) => {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { kartu } = await ambil((await params).kode);
-  return { title: `Pratinjau ${kartu.nama} | Inviora` };
+  return { title: `Pratinjau ${kartu.nama} | Akadana` };
 }
 
 export default async function ContohTemplate({ params, searchParams }: Props) {

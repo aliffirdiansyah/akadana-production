@@ -9,7 +9,7 @@ import { hariIni } from "@/lib/waktu";
 import { FormBuat } from "./FormBuat";
 
 export const metadata: Metadata = {
-  title: "Buat Undangan Digital | Inviora",
+  title: "Buat Undangan Digital | Akadana",
   description: "Buat undangan pernikahan digital: isi data mempelai, susunan acara, galeri foto, rekening, dan daftar tamu, lalu bagikan lewat WhatsApp.",
 };
 

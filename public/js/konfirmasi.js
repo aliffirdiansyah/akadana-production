@@ -17,7 +17,7 @@
     buttonsStyling: true,
     confirmButtonColor: warna("--accent", "#1f5b4a"),
     cancelButtonColor: warna("--muted", "#5b6a62"),
-    customClass: { popup: "inviora-swal" },
+    customClass: { popup: "akadana-swal" },
     // tanpa animasi bila pengguna meminta gerak dikurangi
     showClass: matchMedia("(prefers-reduced-motion: reduce)").matches ? { popup: "" } : undefined,
     hideClass: matchMedia("(prefers-reduced-motion: reduce)").matches ? { popup: "" } : undefined,

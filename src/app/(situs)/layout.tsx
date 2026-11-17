@@ -7,12 +7,12 @@ import "@/styles/aplikasi.css";
 import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "Inviora | Undangan Pernikahan Digital",
+  title: "Akadana | Undangan Pernikahan Digital",
   description: "Buat undangan pernikahan digital: isi data mempelai, susunan acara, galeri foto, rekening, dan daftar tamu, lalu bagikan lewat WhatsApp.",
-  applicationName: "Inviora",
+  applicationName: "Akadana",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/img/logo/inviora-ikon.svg", apple: "/ikon/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "Inviora", statusBarStyle: "default" },
+  icons: { icon: "/img/logo/akadana-ikon.svg", apple: "/ikon/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "Akadana", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

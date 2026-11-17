@@ -1,9 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="Inviora">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="Akadana">
   <g transform="translate(72.4 -6) scale(1.6)">
   <path d="M22 6.5 27.5 12 22 17.5 16.5 12Z" fill="#c9a24a"/>
   <circle cx="22" cy="30" r="13" fill="none" stroke="#1f6b55" stroke-width="4.5"/>
   <circle cx="38" cy="30" r="13" fill="none" stroke="#c9a24a" stroke-width="4.5"/>
   <path d="M32.65 37.46A13 13 0 0 1 26.45 42.22" fill="none" stroke="#1f6b55" stroke-width="4.5"/>
   </g>
-  <text x="120" y="132" text-anchor="middle" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="58" font-weight="600" fill="#1f6b55">invi<tspan fill="#c9a24a">o</tspan>ra</text>
+  <text x="120" y="132" text-anchor="middle" font-family="'Cormorant Garamond', Garamond, Georgia, serif" font-size="58" font-weight="600" fill="#1f6b55">akad<tspan fill="#c9a24a">ana</tspan></text>
 </svg>

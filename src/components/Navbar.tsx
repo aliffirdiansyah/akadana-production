@@ -9,7 +9,7 @@ export async function Navbar() {
   return (
     <nav className="navbar" aria-label="Utama">
       <div className="wrap navbar-isi">
-        <Link href="/" className="brand-link" aria-label="Inviora, ke beranda"><Logo /></Link>
+        <Link href="/" className="brand-link" aria-label="Akadana, ke beranda"><Logo /></Link>
         <ul className="navbar-menu">
           <li><Link href="/template">Template</Link></li>
           {pengguna && <li><Link href="/saya">Undangan saya</Link></li>}

@@ -1,4 +1,4 @@
--- Skema undangan digital Inviora.
+-- Skema undangan digital Akadana.
 -- Semua tabel memakai RLS tanpa policy: anon/authenticated key tidak bisa membaca atau menulis langsung.
 -- Akses hanya dari server Next.js (route handler / server component) dengan service role key,
 -- sehingga aturan bisnis dan validasi tetap di satu tempat (src/lib/undangan).
