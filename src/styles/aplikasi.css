@@ -285,3 +285,20 @@ body { background-image: var(--batik-kawung); background-size: 56px 56px; }
 .buat-kirim-tamu { padding: 16px; border-radius: var(--radius); background: var(--gold-soft); }
 .buat-kirim-tamu h3 { margin: 0 0 4px; }
 .buat-kirim-tamu p { margin: 0 0 10px; }
+
+/* Kirim massal (kirim beruntun) di /tamu/{slug} */
+.tm-massal-mulai { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 14px; }
+.tm-massal-mulai .footnote { margin: 0; }
+.tm-massal { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; border-color: var(--gold); }
+.tm-massal-kepala { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.tm-massal-kepala h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.tm-massal-kepala span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tm-massal-bar { height: 6px; border-radius: 999px; background: var(--gold-soft); overflow: hidden; }
+.tm-massal-bar span { display: block; height: 100%; background: linear-gradient(90deg, #e3c98d, #b8924a); transition: width .3s ease; }
+.tm-massal-tamu { margin: 0; display: flex; flex-direction: column; }
+.tm-massal-tamu strong { font-size: 17px; }
+.tm-massal-tamu span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tm-massal .footnote { margin: 0; }
+.tm-massal-aksi { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tm-massal svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) { .tm-massal-bar span { transition: none; } }

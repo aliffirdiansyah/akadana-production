@@ -49,6 +49,8 @@ export function KelolaTamu({ slug, sudahMasuk }: { slug: string; sudahMasuk: boo
   const [sibuk, setSibuk] = useState(false);
   const [tempel, setTempel] = useState("");
   const [tersalin, setTersalin] = useState<string | null>(null);
+  // Kirim massal: antrean kode tamu, dikirim satu per satu (WhatsApp tidak mengizinkan kirim otomatis dari website)
+  const [antrean, setAntrean] = useState<{ kode: string[]; posisi: number; dikirim: number } | null>(null);
 
   async function api<T>(body: Record<string, unknown>, kodeEdit = kode): Promise<ResponseBase<T>> {
     const res = await fetch(`/api/undangan/${slug}/tamu`, {
@@ -113,6 +115,25 @@ export function KelolaTamu({ slug, sudahMasuk }: { slug: string; sudahMasuk: boo
     api<Tamu>({ Aksi: "kirim", Kode: t.Kode }).then(hasil => {
       if (hasil.Status === STATUS_SUKSES && hasil.Data) setDaftar(d => d?.map(x => (x.Kode === t.Kode ? hasil.Data! : x)) ?? d);
     }).catch(() => { /* status terkirim hanya catatan; WhatsApp sudah terbuka */ });
+  }
+
+  async function mulaiMassal() {
+    if (!daftar) return;
+    const bernomor = daftar.filter(t => t.Telepon);
+    let target = bernomor.filter(t => !t.DikirimPada);
+    if (target.length === 0) {
+      if (bernomor.length === 0) { gagal("Belum ada tamu dengan nomor WhatsApp."); return; }
+      if (!await tanya({ judul: "Semua sudah dikirim", teks: `Kirim ulang ke ${bernomor.length} tamu?`, tombol: "Ya, kirim ulang" })) return;
+      target = bernomor;
+    }
+    setAntrean({ kode: target.map(t => t.Kode), posisi: 0, dikirim: 0 });
+  }
+
+  function kirimBerikut(lewati: boolean) {
+    if (!antrean || !daftar) return;
+    const t = daftar.find(x => x.Kode === antrean.kode[antrean.posisi]);
+    if (t && !lewati) kirim(t);
+    setAntrean({ ...antrean, posisi: antrean.posisi + 1, dikirim: antrean.dikirim + (t && !lewati ? 1 : 0) });
   }
 
   async function salin(t: Tamu) {
@@ -194,6 +215,43 @@ export function KelolaTamu({ slug, sudahMasuk }: { slug: string; sudahMasuk: boo
         <button className="btn tm-tambah-btn" type="submit" disabled={sibuk}><Svg d={Ikon.plus} />{sibuk ? "Menambah..." : "Tambah tamu"}</button>
         {pesan && <p className="notice tm-pesan" role="alert">{pesan}</p>}
       </form>
+
+      {antrean ? (() => {
+        const selesai = antrean.posisi >= antrean.kode.length;
+        const t = selesai ? null : daftar.find(x => x.Kode === antrean.kode[antrean.posisi]);
+        return (
+          <section className="card tm-massal" aria-live="polite" aria-labelledby="judulMassal">
+            <div className="tm-massal-kepala">
+              <h2 id="judulMassal">Kirim massal</h2>
+              <span>{selesai ? `Selesai · ${antrean.dikirim} dikirim` : `${antrean.posisi + 1} dari ${antrean.kode.length}`}</span>
+            </div>
+            <div className="tm-massal-bar" aria-hidden="true"><span style={{ width: `${Math.round((antrean.posisi / antrean.kode.length) * 100)}%` }} /></div>
+            {t ? (
+              <>
+                <p className="tm-massal-tamu"><strong>{t.Nama}</strong><span>{t.Telepon ? tampilNomor(t.Telepon) : ""}</span></p>
+                <p className="footnote">WhatsApp terbuka di tab baru: tekan kirim di sana, lalu kembali ke sini untuk tamu berikutnya.</p>
+                <div className="tm-massal-aksi">
+                  <button type="button" className="sy-btn sy-btn-utama" onClick={() => kirimBerikut(false)}><Svg d={Ikon.wa} />Kirim ke {t.Nama}</button>
+                  <button type="button" className="sy-btn" onClick={() => kirimBerikut(true)}>Lewati</button>
+                  <button type="button" className="sy-btn" onClick={() => setAntrean(null)}>Berhenti</button>
+                </div>
+              </>
+            ) : (
+              <div className="tm-massal-aksi">
+                <p className="tm-massal-tamu"><strong>Semua tamu di antrean sudah diproses.</strong></p>
+                <button type="button" className="sy-btn sy-btn-utama" onClick={() => setAntrean(null)}>Tutup</button>
+              </div>
+            )}
+          </section>
+        );
+      })() : daftar.some(t => t.Telepon) && (
+        <div className="tm-massal-mulai">
+          <button type="button" className="btn tm-tambah-btn" onClick={mulaiMassal}>
+            <Svg d={Ikon.wa} />Kirim massal{daftar.filter(t => t.Telepon && !t.DikirimPada).length > 0 ? ` (${daftar.filter(t => t.Telepon && !t.DikirimPada).length} belum dikirim)` : ""}
+          </button>
+          <span className="footnote">Satu klik per tamu, tamu berikutnya muncul otomatis.</span>
+        </div>
+      )}
 
       {daftar.length === 0 ? (
         <p className="tm-kosong">Belum ada tamu. Tambahkan nama dan nomor WhatsApp di atas.</p>
