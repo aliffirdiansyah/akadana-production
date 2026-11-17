@@ -5,6 +5,7 @@ import "@/styles/site.css";
 import "@/styles/situs.css";
 import "@/styles/aplikasi.css";
 import { Navbar } from "@/components/Navbar";
+import { SKRIP_TEMA } from "@/lib/tema";
 
 export const metadata: Metadata = {
   title: "Akadana | Undangan Pernikahan Digital",
@@ -27,8 +28,10 @@ export const viewport: Viewport = {
 
 export default function LayoutSitus({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id">
+    // suppressHydrationWarning: data-theme dipasang skrip <head> sebelum React berjalan
+    <html lang="id" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: SKRIP_TEMA }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}

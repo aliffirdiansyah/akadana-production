@@ -204,3 +204,40 @@ input[aria-invalid="true"] { border-color: var(--danger); }
   body:has(.buat-lebar) { padding-bottom: 0; }
   .buat-lebar .buat-panel { min-height: 0; }
 }
+
+/* ---------- Tombol tema terang/gelap (navbar) ---------- */
+.navbar-kanan { display: flex; align-items: center; gap: 10px; }
+.tema-tombol {
+  display: grid; place-items: center; width: 38px; height: 38px; padding: 0; cursor: pointer;
+  color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px;
+  transition: border-color .15s ease, background-color .15s ease, transform .3s ease;
+}
+.tema-tombol svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tema-tombol:hover { border-color: var(--gold); color: var(--gold); transform: rotate(-15deg); }
+.tema-tombol:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.navbar-gelap .tema-tombol { color: var(--br-malam-teks); border-color: color-mix(in srgb, var(--br-malam-teks) 25%, transparent); }
+.navbar-gelap .tema-tombol:hover { color: var(--br-prada); border-color: var(--br-prada); }
+@media (prefers-reduced-motion: reduce) { .tema-tombol { transition: none; } .tema-tombol:hover { transform: none; } }
+
+/* ---------- Motif batik Jawa ----------
+   Kawung (empat kelopak buah aren) tipis di latar halaman, parang (garis miring lidah api) di hero gelap,
+   dan pita bermotif belah ketupat di bawah navbar. Warna emas prada; ketebalan beda untuk tema terang dan gelap. */
+:root {
+  --batik-kawung: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%239a7425' stroke-opacity='.11' stroke-width='1'%3E%3Cg id='k'%3E%3Cellipse cx='28' cy='17' rx='6.5' ry='10'/%3E%3Cellipse cx='28' cy='39' rx='6.5' ry='10'/%3E%3Cellipse cx='17' cy='28' rx='10' ry='6.5'/%3E%3Cellipse cx='39' cy='28' rx='10' ry='6.5'/%3E%3Ccircle cx='28' cy='28' r='1.6' fill='%239a7425' fill-opacity='.14'/%3E%3C/g%3E%3Cuse href='%23k' x='-28' y='-28'/%3E%3Cuse href='%23k' x='28' y='-28'/%3E%3Cuse href='%23k' x='-28' y='28'/%3E%3Cuse href='%23k' x='28' y='28'/%3E%3C/g%3E%3C/svg%3E");
+  --batik-parang: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='%23d4b06a' stroke-opacity='.13' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M0 40L40 0M-2 2L2-2M38 42L42 38'/%3E%3Cpath d='M4 16c4 0 4-4 8-4s4-4 8-4M24 36c4 0 4-4 8-4s4-4 8-4'/%3E%3Cpath d='M14 26l3-3 3 3-3 3z' fill='%23d4b06a' fill-opacity='.10'/%3E%3C/g%3E%3C/svg%3E");
+  --batik-pita: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='6' viewBox='0 0 24 6'%3E%3Cg fill='%23c9a24a' fill-opacity='.55'%3E%3Cpath d='M12 0l3 3-3 3-3-3z'/%3E%3Crect x='0' y='2.6' width='7' height='.8'/%3E%3Crect x='17' y='2.6' width='7' height='.8'/%3E%3C/g%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --batik-kawung: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23d8b66c' stroke-opacity='.07' stroke-width='1'%3E%3Cg id='k'%3E%3Cellipse cx='28' cy='17' rx='6.5' ry='10'/%3E%3Cellipse cx='28' cy='39' rx='6.5' ry='10'/%3E%3Cellipse cx='17' cy='28' rx='10' ry='6.5'/%3E%3Cellipse cx='39' cy='28' rx='10' ry='6.5'/%3E%3Ccircle cx='28' cy='28' r='1.6' fill='%23d8b66c' fill-opacity='.10'/%3E%3C/g%3E%3Cuse href='%23k' x='-28' y='-28'/%3E%3Cuse href='%23k' x='28' y='-28'/%3E%3Cuse href='%23k' x='-28' y='28'/%3E%3Cuse href='%23k' x='28' y='28'/%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+:root[data-theme="dark"] {
+  --batik-kawung: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23d8b66c' stroke-opacity='.07' stroke-width='1'%3E%3Cg id='k'%3E%3Cellipse cx='28' cy='17' rx='6.5' ry='10'/%3E%3Cellipse cx='28' cy='39' rx='6.5' ry='10'/%3E%3Cellipse cx='17' cy='28' rx='10' ry='6.5'/%3E%3Cellipse cx='39' cy='28' rx='10' ry='6.5'/%3E%3Ccircle cx='28' cy='28' r='1.6' fill='%23d8b66c' fill-opacity='.10'/%3E%3C/g%3E%3Cuse href='%23k' x='-28' y='-28'/%3E%3Cuse href='%23k' x='28' y='-28'/%3E%3Cuse href='%23k' x='-28' y='28'/%3E%3Cuse href='%23k' x='28' y='28'/%3E%3C/g%3E%3C/svg%3E");
+}
+body { background-image: var(--batik-kawung); background-size: 56px 56px; }
+.pk-hero, .sy-hero { background-image: var(--batik-parang); background-size: 40px 40px; }
+.navbar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 6px; pointer-events: none;
+  background: var(--batik-pita) repeat-x center / 24px 6px;
+}
