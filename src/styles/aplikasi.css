@@ -158,3 +158,30 @@ input[aria-invalid="true"] { border-color: var(--danger); }
 .beranda-pintas-panah { flex: none; color: var(--accent); transition: transform .15s ease; }
 .beranda-pintas:hover .beranda-pintas-panah { transform: translateX(3px); }
 @media (prefers-reduced-motion: reduce) { .beranda-pintas, .beranda-pintas-panah { transition: none; } .beranda-pintas:hover { transform: none; } }
+
+/* ---------- Scrollbar: luxury minimalis ----------
+   Pegangan emas prada berbentuk pil di atas lintasan transparan. Tipis saat diam, sedikit menebal dan lebih terang saat
+   disentuh. Chromium/Safari memakai ::-webkit-scrollbar; Firefox memakai scrollbar-color (hanya bila webkit tidak ada,
+   karena di Chromium baru scrollbar-color menimpa gaya webkit). */
+:root {
+  --gulir-emas-1: #e3c98d;
+  --gulir-emas-2: #b8924a;
+  --gulir-emas-redup: color-mix(in srgb, #c9a24a 55%, transparent);
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb {
+  /* border transparan + padding-box = pegangan tampak lebih ramping dari lebar scrollbar */
+  border: 3px solid transparent; background-clip: padding-box; border-radius: 999px;
+  background-color: var(--gulir-emas-redup);
+}
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background-image: linear-gradient(180deg, var(--gulir-emas-1), var(--gulir-emas-2));
+}
+::-webkit-scrollbar-thumb:active { border-width: 2px; background-color: var(--gulir-emas-2); background-image: none; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--gulir-emas-redup) transparent; }
+}
