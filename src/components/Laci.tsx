@@ -41,7 +41,7 @@ export function Laci({ nama, email, inisial }: { nama: string; email: string; in
           </div>
           <ul className="laci-menu">
             <li><Link href="/saya" onClick={tutup}>Undangan saya</Link></li>
-            <li><Link href="/#template" onClick={tutup}>Template undangan</Link></li>
+            <li><Link href="/template" onClick={tutup}>Template undangan</Link></li>
           </ul>
           <form className="laci-keluar" action="/keluar" method="post" onSubmit={keluar}>
             <button type="submit" className="btn-ghost">Keluar</button>

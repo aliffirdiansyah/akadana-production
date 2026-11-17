@@ -11,7 +11,7 @@ export async function Navbar() {
       <div className="wrap navbar-isi">
         <Link href="/" className="brand-link" aria-label="Inviora, ke beranda"><Logo /></Link>
         <ul className="navbar-menu">
-          <li><Link href="/#template">Template</Link></li>
+          <li><Link href="/template">Template</Link></li>
           {pengguna && <li><Link href="/saya">Undangan saya</Link></li>}
         </ul>
         {pengguna

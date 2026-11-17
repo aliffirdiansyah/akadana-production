@@ -27,9 +27,17 @@ input[aria-invalid="true"] { border-color: var(--danger); }
 .beranda-form-judul { margin: -6px 0 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 1.2; }
 .beranda-form-kirim { width: 100%; }
 .beranda-form-aksi { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.beranda-form-login { max-width: 640px; margin-bottom: 32px; }
-.beranda-form-login .beranda-form { box-shadow: none; }
 
 /* Tombol masuk dengan Google (/masuk) */
 .akun-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
 .akun-google svg { flex: none; background: #fff; border-radius: 50%; padding: 3px; box-sizing: content-box; }
+
+/* Beranda pengguna login: hanya judul + form data utama, di tengah layar */
+.beranda-fokus {
+  min-height: calc(100dvh - var(--tinggi-navbar, 69px));
+  display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px;
+  padding-block: 32px 48px;
+}
+.beranda-fokus-kepala { text-align: center; max-width: 560px; }
+.beranda-fokus-kepala .tagline { margin-top: 6px; }
+.beranda-fokus .beranda-form { width: 100%; max-width: 560px; box-shadow: none; }

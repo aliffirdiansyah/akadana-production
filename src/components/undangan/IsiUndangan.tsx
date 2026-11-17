@@ -45,8 +45,7 @@ export function IsiUndangan({ dokumen, templateKode, slug, namaTamu, ucapan, pra
           </div>
           <div className="pratinjau-aksi">
             {/* <a> biasa: komponen ini juga dirender di luar router Next (iframe pratinjau), dan berpindah ke layout lain */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a className="pratinjau-kembali" href="/#template">Kembali</a>
+            <a className="pratinjau-kembali" href="/template">Kembali</a>
             <a className="pratinjau-pakai" href={bar.hrefPakai}>{bar.teksPakai}</a>
           </div>
         </div>

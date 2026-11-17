@@ -27,7 +27,7 @@ export default async function Saya() {
       {daftar.length === 0 ? (
         <div className="card saya-kosong">
           <p>Belum ada undangan. Pilih template untuk membuat yang pertama.</p>
-          <Link className="btn" href="/#template">Pilih template</Link>
+          <Link className="btn" href="/template">Pilih template</Link>
         </div>
       ) : (
         <ul className="saya-daftar">

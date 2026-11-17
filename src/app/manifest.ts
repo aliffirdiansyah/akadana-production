@@ -23,7 +23,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/img/logo/inviora-ikon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
     ],
     shortcuts: [
-      { name: "Pilih template", url: "/#template", icons: [{ src: "/ikon/ikon-192.png", sizes: "192x192" }] },
+      { name: "Pilih template", url: "/template", icons: [{ src: "/ikon/ikon-192.png", sizes: "192x192" }] },
       { name: "Undangan saya", url: "/saya", icons: [{ src: "/ikon/ikon-192.png", sizes: "192x192" }] },
     ],
   };

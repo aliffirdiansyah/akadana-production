@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormSingkat } from "@/components/FormSingkat";
 import { NavGelap } from "@/components/NavGelap";
 import { hariIni } from "@/lib/waktu";
-import { NamaContoh, TautanContoh } from "@/components/TautanContoh";
+import { DaftarTemplate } from "@/components/DaftarTemplate";
 import { getTemplateList } from "@/lib/undangan/data";
 import { getPengguna } from "@/lib/supabase/server";
 
@@ -71,83 +71,26 @@ export default async function Katalog() {
         </div>
       )}
 
-      {sudahLogin && (
-        <section className="wrap" aria-labelledby="judulBeranda">
-          <header className="top">
-            <div>
-              <h1 className="brand" id="judulBeranda">Undangan digital</h1>
-              <p className="tagline">Isi data utama untuk membuat undangan baru, atau ubah undangan yang sudah ada di <Link href="/saya">Undangan saya</Link>.</p>
-            </div>
+      {sudahLogin ? (
+        // Pengguna login: fokus mengisi, form di tengah layar. Template dipilih dari editor (/template).
+        <section className="wrap beranda-fokus" aria-labelledby="judulBeranda">
+          <header className="beranda-fokus-kepala">
+            <h1 className="brand" id="judulBeranda">Undangan digital</h1>
+            <p className="tagline">Isi data utama untuk membuat undangan baru, atau ubah undangan yang sudah ada di <Link href="/saya">Undangan saya</Link>.</p>
           </header>
-          <div className="beranda-form-login">
-            <FormSingkat kodeTemplate={tujuan} hariIni={hariIni()} />
-          </div>
+          <FormSingkat kodeTemplate={tujuan} hariIni={hariIni()} />
         </section>
-      )}
-
-      <div className={sudahLogin ? "wrap" : "wrap ud-template"} id="template">
-        {sudahLogin ? (
-          <header className="top">
-            <div>
-              <h2 className="brand">Pilih template</h2>
-              <p className="tagline">Lihat pratinjau tiap template. Isian yang sudah diisi ikut terbawa saat ganti template.</p>
-            </div>
-          </header>
-        ) : (
+      ) : (
+        <div className="wrap ud-template" id="template">
           <header className="ud-template-kepala">
             <div>
               <h2 className="pk-h2">Pilih template</h2>
               <p>Buka pratinjau dengan isi contoh, lalu pakai yang paling cocok. Draf yang sudah kamu isi ikut terbawa saat ganti template.</p>
             </div>
           </header>
-        )}
-
-        {daftar.length === 0 ? (
-          <p className="notice">Belum ada template yang tersedia.</p>
-        ) : (
-          <ul className="tpl-daftar tpl-katalog">
-            {daftar.map(t => {
-              const terkunci = !t.gratis && !sudahLogin;
-              const tujuan = `/buat/${t.kode}`;
-              const contoh = `/contoh/${t.kode}`;
-              return (
-                <li key={t.kode}>
-                  <div className="tpl-kartu" data-kode={t.kode}>
-                    {/* gambar mini membuka pratinjau yang sama dengan tombol "Pratinjau", jadi disembunyikan dari pembaca layar */}
-                    <TautanContoh className="tpl-pratinjau" href={contoh} tabIndex={-1} aria-hidden="true">
-                      <span className="tpl-bingkai">
-                        <span className="tpl-label">{t.contohLabel}</span>
-                        <span className="tpl-nama"><NamaContoh asli={t.contohNama} /></span>
-                        <span className="tpl-belah"></span>
-                      </span>
-                    </TautanContoh>
-                    <span className="tpl-info">
-                      <span className="tpl-judul">{t.nama}</span>
-                      {t.gratis ? (
-                        <span className="tpl-status tpl-gratis">Gratis</span>
-                      ) : terkunci ? (
-                        <span className="tpl-status tpl-kunci">
-                          <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm2 6H6V4.5a2 2 0 1 1 4 0V7Z" /></svg>
-                          Wajib masuk
-                        </span>
-                      ) : (
-                        <span className="tpl-status tpl-terbuka">Terbuka</span>
-                      )}
-                      <span className="tpl-tombol">
-                        <TautanContoh className="tpl-btn tpl-btn-garis" href={contoh} aria-label={`Pratinjau ${t.nama} (tab baru)`}>Pratinjau</TautanContoh>
-                        <Link className="tpl-btn tpl-btn-utama" href={terkunci ? `/masuk?returnUrl=${encodeURIComponent(tujuan)}` : tujuan}
-                          aria-label={`${t.gratis ? "Coba gratis" : terkunci ? "Masuk untuk memakai" : "Pakai"} ${t.nama}`}>
-                          {t.gratis ? "Coba gratis" : terkunci ? "Masuk" : "Pakai"}
-                        </Link>
-                      </span>
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+          <DaftarTemplate daftar={daftar} sudahLogin={false} />
+        </div>
+      )}
     </>
   );
 }
