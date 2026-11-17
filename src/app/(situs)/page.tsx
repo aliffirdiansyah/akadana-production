@@ -1,6 +1,6 @@
 // Beranda = katalog template (port Views/UndanganDigital/Undangan/Katalog.cshtml).
-// Form data utama tampil langsung (FormSingkat): isinya jadi draf editor, jadi tidak diketik ulang di /buat.
-// Pengunjung yang belum masuk melihat hero + form, sorotan isi editor, lalu daftar template.
+// Pengunjung: hero dengan ilustrasi form + ponsel dan tombol coba gratis, sorotan isi editor, lalu daftar template.
+// Pengguna login: form data utama (FormSingkat) di tengah layar; isinya jadi draf editor, jadi tidak diketik ulang di /buat.
 import Link from "next/link";
 import { FormSingkat } from "@/components/FormSingkat";
 import { NavGelap } from "@/components/NavGelap";
@@ -41,15 +41,52 @@ export default async function Katalog() {
                 <h1 className="pk-judul">Isi enam kolom, undanganmu langsung jadi.</h1>
                 <p className="pk-lead">Tulis nama mempelai, tanggal, jam, dan lokasi. Pratinjaunya berubah selagi kamu mengetik, lalu bagikan link-nya ke tamu lewat WhatsApp.</p>
                 <div className="pk-aksi">
+                  {gratis && <Link className="btn pk-btn" href={`/buat/${gratis.kode}`}>Coba gratis tanpa akun</Link>}
                   <a className="pk-btn-garis" href="#template">Lihat semua template</a>
                 </div>
-                <p className="pk-kecil">Tanpa akun. Isianmu tersimpan otomatis di perangkat ini dan undangan bisa diubah lagi setelah jadi. Template lainnya terbuka setelah masuk.</p>
+                <p className="pk-kecil">Isianmu tersimpan otomatis sebagai draf di perangkat ini. Template lainnya terbuka setelah masuk.</p>
               </div>
 
-              {/* Form data utama asli: isinya langsung jadi draf editor, jadi tidak perlu diketik ulang */}
-              <div className="beranda-form-wadah">
-                <FormSingkat kodeTemplate={tujuan} hariIni={hariIni()} />
-              </div>
+              {/* Pratinjau dekoratif: form "Data utama" dan hasilnya di ponsel. Data rekaan. */}
+              <figure className="pk-pratinjau ud-pratinjau" aria-label="Contoh form undangan dan hasilnya">
+                <div className="ud-form" aria-hidden="true">
+                  <div className="ud-form-kepala">
+                    <span className="pk-label">Data utama</span>
+                    <span className="ud-simpan"><span className="ud-simpan-titik"></span>Draf tersimpan</span>
+                  </div>
+                  <div className="ud-kolom-grid">
+                    <div className="ud-kolom"><span>Mempelai pria</span><b>Alif Pratama</b></div>
+                    <div className="ud-kolom ud-kolom-aktif"><span>Mempelai wanita</span><b>Putri Maharani<i className="ud-kursor"></i></b></div>
+                    <div className="ud-kolom"><span>Tanggal acara</span><b>12 Juni 2027</b></div>
+                    <div className="ud-kolom"><span>Jam acara</span><b>08.00 WIB</b></div>
+                    <div className="ud-kolom ud-kolom-penuh"><span>Lokasi acara</span><b>Pendopo Sekar Kedhaton, Yogyakarta</b></div>
+                    <div className="ud-kolom ud-kolom-penuh"><span>Nomor WhatsApp</span><b>0812 3456 7890</b></div>
+                  </div>
+                </div>
+
+                <div className="ud-hp" aria-hidden="true">
+                  <div className="ud-hp-layar">
+                    <span className="ud-hp-kecil">The wedding of</span>
+                    <span className="ud-hp-nama">Alif <i>&amp;</i> Putri</span>
+                    <span className="ud-hp-belah"></span>
+                    <span className="ud-hp-tanggal">12 · 06 · 2027</span>
+                    <span className="ud-hp-hitung"><span><b>128</b>hari</span><span><b>06</b>jam</span><span><b>41</b>menit</span></span>
+                    <span className="ud-hp-tombol">Buka undangan</span>
+                  </div>
+                </div>
+
+                <div className="pk-tempel ud-tempel-1" aria-hidden="true">
+                  <span className="ud-tempel-ikon">
+                    <svg viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" /></svg>
+                  </span>
+                  <span><b>/u/alif-putri</b><br />Untuk: Keluarga Pak Budi</span>
+                </div>
+                <div className="pk-tempel ud-tempel-2" aria-hidden="true">
+                  <span className="pk-centang">✓</span>
+                  <span><b>3 tamu</b> konfirmasi hadir</span>
+                </div>
+                <figcaption className="sr-only">Contoh: form data utama di sebelah kiri, hasil undangan di ponsel di sebelah kanan.</figcaption>
+              </figure>
             </div>
           </header>
 
