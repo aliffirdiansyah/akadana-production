@@ -12,7 +12,7 @@ import { IsiUndangan } from "@/components/undangan/IsiUndangan";
 import { bacaDraf, hapusDraf, simpanDraf } from "@/lib/draf";
 import { Konfirmasi } from "@/lib/konfirmasi";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import type { DokumenUndangan } from "@/lib/undangan/dokumen";
+import { FORMAT_TELEPON, type DokumenUndangan } from "@/lib/undangan/dokumen";
 import {
   BUCKET_FOTO, ErrorBisnis, JUMLAH_ACARA_MAKS, JUMLAH_GALERI_MAKS, JUMLAH_REKENING_MAKS, JUMLAH_TAMU_MAKS, PATH_FOTO_PRATINJAU, UKURAN_FOTO_MAKS,
 } from "@/lib/undangan/konstanta";
@@ -234,6 +234,29 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
   const bacaTamu = () => ($<HTMLTextAreaElement>("daftarTamu").value).split("\n").map(x => x.trim()).filter(Boolean);
   on($("daftarTamu"), "input", () => { $("jumlahTamu").textContent = String(bacaTamu().length); });
 
+  // ---------- nomor WhatsApp ----------
+  // Hanya angka, boleh diawali "+". Huruf, spasi, dan tanda lain langsung dibuang saat diketik atau ditempel.
+  const saringTelepon = (v: string) => (v.trim().startsWith("+") ? "+" : "") + v.replace(/\D/g, "");
+  // Aturan sama dengan server (susun.ts): 08xx / 628xx / +628xx, 10-15 digit setelah 62
+  const teleponValid = (v: string) => {
+    let angka = saringTelepon(v).replace(/^\+/, "");
+    if (angka.startsWith("0")) angka = "62" + angka.slice(1);
+    return FORMAT_TELEPON.test(angka);
+  };
+  const PESAN_TELEPON = "Nomor WhatsApp tidak valid. Gunakan angka saja, contoh: 081234567890.";
+
+  for (const id of ["singkatTelepon", "telepon"]) {
+    const el = $(id);
+    on(el, "input", () => {
+      const bersih = saringTelepon(el.value);
+      if (bersih === el.value) return;
+      // posisi kursor dipertahankan: hitung karakter yang tersisa sebelum kursor
+      const kursor = saringTelepon(el.value.slice(0, el.selectionStart ?? el.value.length)).length;
+      el.value = bersih;
+      el.setSelectionRange(kursor, kursor);
+    });
+  }
+
   // ---------- kirim ----------
   function periksa(acara: Baris[], rekening: Baris[], tamu: string[]): { pesan: string; el: HTMLElement } | null {
     const wajib: [string, string][] = [
@@ -253,6 +276,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     }
     if (!$("lokasiNama").value.trim()) return { pesan: "Nama tempat acara harus diisi.", el: $("lokasiNama") };
     if (!$("telepon").value.trim()) return { pesan: "Nomor WhatsApp harus diisi.", el: $("telepon") };
+    if (!teleponValid($("telepon").value)) return { pesan: PESAN_TELEPON, el: $("telepon") };
     const peta = $("lokasiPeta").value.trim();
     if (peta && !peta.startsWith("https://")) return { pesan: "Link peta harus berupa alamat https://", el: $("lokasiPeta") };
     for (const { el, data } of rekening) {
@@ -706,7 +730,7 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
     setel("lokasiNama", d.Lokasi?.Nama);
     setel("lokasiAlamat", d.Lokasi?.Alamat);
     setel("lokasiPeta", d.Lokasi?.UrlPeta);
-    setel("telepon", d.Telepon);
+    setel("telepon", saringTelepon(d.Telepon ?? ""));
     for (const [id, nama] of Object.entries(TEKS_BAWAAN))
       if (d[nama] != null) setel(id, d[nama]);
     tampilRsvp.checked = !!d.TampilRsvp;
@@ -768,6 +792,12 @@ export function pasangEditor({ kode, dokumenAwal, hariIni }: { kode: string; dok
         $(id).focus();
         return;
       }
+    }
+    if (!teleponValid($("singkatTelepon").value)) {
+      singkatNotice.hidden = false;
+      singkatNotice.textContent = PESAN_TELEPON;
+      $("singkatTelepon").focus();
+      return;
     }
 
     // Isi form singkat masuk ke editor: acara pertama mendapat tanggal dan jam, acara kedua tanggalnya saja

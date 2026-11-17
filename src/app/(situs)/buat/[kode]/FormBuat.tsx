@@ -41,7 +41,21 @@ export function FormBuat({ kartu, dokumenAwal, awal, hariIni }: Props) {
       <header className="top">
         <div>
           <h1 className="brand">Buat undangan digital</h1>
-          <p className="buat-template">Template: <strong>{kartu.nama}</strong> · <Link href="/#template">Ganti template</Link></p>
+          <div className="buat-tpl" data-kode={kartu.kode}>
+            <span className="buat-tpl-mini" aria-hidden="true">&amp;</span>
+            <span className="buat-tpl-teks">
+              <span className="buat-tpl-label">Template</span>
+              <strong>{kartu.nama}</strong>
+            </span>
+            {/* isian tersimpan sebagai draf, jadi ikut terbawa ke template lain */}
+            <Link className="buat-tpl-ganti" href="/#template" title="Isian ikut terbawa ke template lain">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                <path d="M13.5 6A5.5 5.5 0 0 0 3.3 4.3M2.5 10a5.5 5.5 0 0 0 10.2 1.7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                <path d="M3 1.8v2.8h2.8M13 14.2v-2.8h-2.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Ganti template
+            </Link>
+          </div>
           <p className="tagline" id="buatTagline">Isi data utama dulu. Detail lain bisa dilengkapi sambil melihat undangannya.</p>
         </div>
       </header>

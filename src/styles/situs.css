@@ -146,10 +146,10 @@ body:has(.akun-masuk) { padding-bottom: 0; }
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
   transition: border-color .15s ease, transform .15s ease;
 }
-.tpl-kartu[data-kode="jawa-02"] { --tpl-gelap: #12332a; --tpl-tengah: #1f5b4a; --tpl-teks: #e6f0ea; }
-.tpl-kartu[data-kode="jawa-03"] { --tpl-gelap: #3d0f14; --tpl-tengah: #7a1f2b; --tpl-teks: #f7e6dd; }
-.tpl-kartu[data-kode="modern-01"] { --tpl-gelap: #15181b; --tpl-tengah: #15181b; --tpl-emas: #f0c9b8; --tpl-teks: #ffffff; }
-.tpl-kartu[data-kode="islami-01"] { --tpl-gelap: #0a2f28; --tpl-tengah: #0f4c3f; --tpl-teks: #ecd9a0; }
+:is(.tpl-kartu, .buat-tpl)[data-kode="jawa-02"] { --tpl-gelap: #12332a; --tpl-tengah: #1f5b4a; --tpl-teks: #e6f0ea; }
+:is(.tpl-kartu, .buat-tpl)[data-kode="jawa-03"] { --tpl-gelap: #3d0f14; --tpl-tengah: #7a1f2b; --tpl-teks: #f7e6dd; }
+:is(.tpl-kartu, .buat-tpl)[data-kode="modern-01"] { --tpl-gelap: #15181b; --tpl-tengah: #15181b; --tpl-emas: #f0c9b8; --tpl-teks: #ffffff; }
+:is(.tpl-kartu, .buat-tpl)[data-kode="islami-01"] { --tpl-gelap: #0a2f28; --tpl-tengah: #0f4c3f; --tpl-teks: #ecd9a0; }
 .tpl-kartu[data-kode="modern-01"] .tpl-bingkai { align-items: flex-start; justify-content: flex-end; text-align: left; border-color: transparent; }
 .tpl-kartu[data-kode="modern-01"] .tpl-nama { font-family: "Gloock", Georgia, serif; font-weight: 400; }
 .tpl-kartu[data-kode="modern-01"] .tpl-belah { display: none; }
@@ -188,7 +188,34 @@ body:has(.akun-masuk) { padding-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .tpl-kartu, .tpl-btn { transition: none; } }
 
 /* Buat undangan digital (/undangan/buat/{kode}) */
-.buat-template { margin: 4px 0 0; font-size: 14px; }
+/* Template yang dipakai + tombol ganti: contoh warna template (palet sama dengan kartu katalog) */
+.buat-tpl {
+  --tpl-gelap: #2f1c10; --tpl-tengah: #5a3a22; --tpl-emas: #c9a24a; --tpl-teks: #f3e8d2;
+  display: inline-flex; align-items: center; gap: 12px; margin: 10px 0 2px; padding: 8px 8px 8px 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; max-width: 100%;
+}
+.buat-tpl-mini {
+  flex: none; width: 40px; height: 52px; border-radius: 8px; position: relative;
+  background: radial-gradient(circle at 50% 35%, var(--tpl-tengah), var(--tpl-gelap));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tpl-emas) 55%, transparent);
+  display: grid; place-items: center; color: var(--tpl-emas); font: 600 15px/1 "Cormorant Garamond", Georgia, serif;
+}
+.buat-tpl-mini::after { content: ""; position: absolute; inset: 4px; border: 1px solid color-mix(in srgb, var(--tpl-emas) 40%, transparent); border-radius: 5px; }
+.buat-tpl-teks { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.buat-tpl-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.buat-tpl-teks strong { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.buat-tpl-ganti {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; padding: 8px 14px;
+  font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none;
+  background: var(--accent-soft); border: 1px solid transparent; border-radius: 999px;
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
+}
+.buat-tpl-ganti:hover { border-color: var(--accent); transform: translateY(-1px); }
+.buat-tpl-ganti:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.buat-tpl-ganti svg { transition: transform .25s ease; }
+.buat-tpl-ganti:hover svg { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .buat-tpl-ganti, .buat-tpl-ganti svg { transition: none; } .buat-tpl-ganti:hover { transform: none; } .buat-tpl-ganti:hover svg { transform: none; } }
+@media (max-width: 480px) { .buat-tpl { display: flex; } .buat-tpl-ganti { margin-left: auto; padding: 8px 12px; } }
 .buat-undangan { max-width: 680px; }
 .buat-undangan form { display: flex; flex-direction: column; gap: 16px; }
 .buat-undangan .footnote { margin: 0; }
