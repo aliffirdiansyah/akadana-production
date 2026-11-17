@@ -283,3 +283,22 @@ body.terkunci { overflow: hidden; }
 .penutup .kontak { margin-top: 22px; }
 
 .kaki { padding: 22px; text-align: center; font-size: 12px; color: var(--uj-prada-muda); background: var(--uj-sogan-tua); letter-spacing: .08em; }
+
+/* ---------- Scrollbar: luxury minimalis ----------
+   Pegangan berbentuk pil warna aksen template (--uj-prada) di atas lintasan transparan; menebal dan bergradasi saat
+   disentuh. Berlaku di halaman undangan, pratinjau di editor, dan daftar ucapan. Firefox memakai scrollbar-color. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent; background-clip: padding-box; border-radius: 999px;
+  background-color: color-mix(in srgb, var(--uj-prada) 60%, transparent);
+}
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--uj-prada) 70%, #fff), var(--uj-prada));
+}
+::-webkit-scrollbar-thumb:active { border-width: 2px; background-color: var(--uj-prada); background-image: none; }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--uj-prada) 60%, transparent) transparent; }
+}
