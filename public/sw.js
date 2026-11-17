@@ -2,11 +2,12 @@
 // - Navigasi halaman: network-first, salinan terakhir disimpan; offline -> salinan, atau /offline.
 //   /buat/* ikut disimpan, jadi form pembuatan yang pernah dibuka tetap bisa diisi tanpa internet (draf di localStorage).
 // - Aset build Next (/_next/static, nama berisi hash): cache-first.
-// - CSS template, script, ikon, foto undangan (/foto/*): stale-while-revalidate.
+// - CSS template dan script (/undangan/css, /js): network-first (nama file tidak berubah saat isinya berubah).
+// - Ikon, gambar, foto undangan (/foto/*): stale-while-revalidate.
 // - Font Google dan SweetAlert2 dari CDN: stale-while-revalidate.
 // - API (/api/*), /auth/*, /keluar, dan semua selain GET: tidak pernah lewat cache.
 // Naikkan VERSI bila aturan di file ini berubah; cache lama dihapus saat aktivasi.
-const VERSI = "v1";
+const VERSI = "v2";
 const CACHE_HALAMAN = `halaman-${VERSI}`;
 const CACHE_ASET = `aset-${VERSI}`;
 const CACHE_LUAR = `luar-${VERSI}`;
@@ -56,6 +57,17 @@ async function cacheDulu(request, nama) {
   return res;
 }
 
+async function jaringanDulu(request, nama) {
+  const cache = await caches.open(nama);
+  try {
+    const res = await fetch(request, { cache: "no-cache" });
+    if (res.ok) cache.put(request, res.clone());
+    return res;
+  } catch {
+    return (await cache.match(request)) ?? Response.error();
+  }
+}
+
 async function basiSambilPerbarui(request, nama) {
   const cache = await caches.open(nama);
   const ada = await cache.match(request);
@@ -74,7 +86,9 @@ self.addEventListener("fetch", event => {
     if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/") || url.pathname === "/keluar") return;
     if (request.mode === "navigate") { event.respondWith(halaman(request)); return; }
     if (url.pathname.startsWith("/_next/static/")) { event.respondWith(cacheDulu(request, CACHE_ASET)); return; }
-    if (/^\/(undangan\/css|js|ikon|img|foto)\//.test(url.pathname)) { event.respondWith(basiSambilPerbarui(request, CACHE_ASET)); return; }
+    // CSS template dan script berubah tanpa ganti nama file: ambil dari jaringan dulu, cache hanya cadangan offline
+    if (/^\/(undangan\/css|js)\//.test(url.pathname)) { event.respondWith(jaringanDulu(request, CACHE_ASET)); return; }
+    if (/^\/(ikon|img|foto)\//.test(url.pathname)) { event.respondWith(basiSambilPerbarui(request, CACHE_ASET)); return; }
     return;
   }
 
